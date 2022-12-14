@@ -1,0 +1,726 @@
+---
+title: "Paytzini"
+author: "Francisco Alfonso Perez Storms"
+date: "9/5/2022"
+output: html_document
+---
+Hacer supuestos, 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Modo R, porque me interesa la relación entre los descriptores de mis objetos. matriz de correlación o varianza-covarianza. 
+Modo Q, solo con matrices de distancia, por lo tanto solo variables categoricas. Ver la relación entre los objetos. 
+
+Es importante hacer un analisis de ordenamiento, un PCA
+
+
+library(readxl)
+
+Paytzini <- read_excel("C:/Users/gbsto/Downloads/Telegram Desktop/Paytzini.xlsx", 
+    col_types = c("numeric", "numeric", "text", 
+        "text", "text", "numeric", "text", 
+        "text", "text", "text", "text", "numeric", 
+        "text", "numeric", "numeric"))
+
+paytzini_num <- read_excel("C:/Users/gbsto/Downloads/Telegram Desktop/paytzini_nume.xlsx", 
+    col_types = c("numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+
+Paytzini <- Paytzini [c(-36,-41,-43),]
+#View (Paytzini)
+paytzini_num <- paytzini_num[-c(36,41,43),]
+#View (paytzini_num)
+
+
+```{r}
+
+library(readxl)
+
+Paytzini <- read_excel("C:/Users/gbsto/Downloads/Telegram Desktop/Paytzini_m.xlsx", 
+    col_types = c("numeric", "numeric", "text", 
+        "text", "text", "numeric", "text", 
+        "text", "text", "text", "text", "numeric", 
+        "text", "numeric", "numeric"))
+
+Paytzini_dominal <- read_csv("C:/Users/gbsto/Downloads/Telegram Desktop/Paytzini_numm.csv", 
+     col_types = cols(edad = col_number(), 
+         id = col_number(), mujer = col_double(), 
+         precio_integral = col_number(), precio_normal = col_number()))
+ View(Paytzini_dominal) 
+
+paytzini_num <- read_excel("C:/Users/gbsto/Downloads/Telegram Desktop/paytzini_nume.xlsx", 
+    col_types = c("numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+
+a
+paytzini_numme<- edit(paytzini_num)
+
+View(paytzini_numme)
+```
+
+
+```{r}
+payt_conti <- Paytzini[,c(2,6,12,14,15)]
+View(payt_conti)
+payt_cate <-  Paytzini[, c(3,4,5,7,8,9,10,11,13)]
+View(payt_cate)
+
+
+```
+
+Supuestos
+```{r}
+#multinormalidad
+#prueba de bondad de ajuste. para saber si ajustan a una gausiana
+library(rstatix)
+library(stats)
+mshapiro_test(payt_conti)
+#Ho: Hay distribución multinormal, 
+#cuando me da un valor que es menor a .05, siempre que se hace una prueba de bondad de ajuste, se quiere saber el tipode distribución de las variables, la la HO es que la distribución sí es multinormal, y queremos aceptar la hipotesis nula. Al hacer la prueba con las 5 variables continuas me da un valor significativo de p entonces puedo llegar a la conclusión de que no se cumple con la hipotesis nula, por lo tanto debemos aceptar alguna de las hipotesis alternativas.POR LO TANTO ES UN PROBLEMA, PORQUE SÍ REQUERIAMOS UNA DISTRIBUCIÓN MULTI-NORMAL. Conforme uno aumenta el numero de objetos el analisis de varianza y multivariado son robustos al supuestos de multinormalidad, 
+#Dos alternativas, entonces estrictamente no podemos hacer un manova, porque ya lo hizo R, pero no hay confianza estadistica de que ese resultado este bien hecho. debemos buscar que otro analisis podemos hacer,
+#Otra opción, en general "estos" son super robustos para el primer supuesto de la distribución de las variables y por tanto podriamos ver los otros supuestos y ahora sí tomar una decisión
+
+# 2.- Supuesto de homogeneidad de las matrices de varianza-covarianza
+#Se hace la prueba m de caja, 
+#Ho, Sí hay homogenidad de varianza (las matrices son iguales), o sea que son iguales entre las 3 especies. 
+print("Sexo")
+box_m(as.matrix(payt_conti), Paytzini$sexo)
+print("queretaro")
+box_m(as.matrix(payt_conti), Paytzini$queretaro)
+print("pan")
+box_m(as.matrix(payt_conti), Paytzini$pan)
+print("like_postres")
+box_m(as.matrix(payt_conti), Paytzini$like_postres)
+print("postres")
+box_m(as.matrix(payt_conti), Paytzini$postres)
+print("acompaña")
+box_m(as.matrix(payt_conti), Paytzini$acompaña)
+print("momento_día")
+box_m(as.matrix(payt_conti), Paytzini$momento_dia)
+print("favorito")
+box_m(as.matrix(payt_conti), Paytzini$favorito)
+
+#Tengo muy pocas observaciones por variables como para obtener algo significativo, y en donde tengo suficientes sexo y queretaro como es significativo implica que NO HAY homogenidad de varianza. El que queda marginalmente no significativo es la variable de si son de queretaro.
+
+#El ultimo supuesto es una cuestion de independencia, Es que hay independecia entre los errores y los valores originales, pero si no hay homogenidad de varianza, tampoco habra independencia. Y por lo tanto no lo pondriamos a prueba. En iris si uno lo hace con solo las 3 primeras variables sí se cumplen los supuestos, quitando el ancho del petalo. 
+
+#Primero es el manova y luego se hacen los supuestos.
+#En caso de que los supuestos sí se cumplen, ahora deberiamos hacer las pruebas posthoc, seria hacer anovas individuales, y hay formas faciles de hacerlo, 
+sumary.aov # y colocar el manova dentro, y en automatico obtendremos los n cantidad de anovas. De esta manera podremos saber cual es la Ha que vamos a aceptar, si sale significativo en alguno. Estamos viendo los vectores para los promedios, que los vectores para los promedios es igual para la especie setosa y la virginica, pero no para versicolor y asi sucesivamente. La prueba nos dice para esas especies cuales son las variables que sí son diferentes o no entre las especies, cada una de esas variables que se midieran o tomaran en cuenta. La prueba que hacemos de los multiples aov nos dicen sobre las variables individuales y no sobre los vectores, y la de los vectores es el manova. Si los vectores son diferentes es porque en alguno de los elementos de ese vector no son iguales, los elementos del vector son los promedios de las variables. 
+
+#Lo mismo ocurre con el mancova, se hace lo mismo, evaluar el efecto de factores sobre variables continuas, pero, queriamos controlar por otra variable que es la co-variable, y en multivariada se llama mancova
+
+#Ancova se se hace aov o lm, aov(variable de respuesta ~ un_factor + variable_z, data) se quiere corregir el efecto del factor que es discreto con la variable continua z. lm(Y ~ A + z, data). Para mancova mancova(Y + Species + "covariable", data), se interepta igual pero se corrige el efecto de especie por otra variable continua que se considera como covariable, algunas base de datos se puede hacer el mancova, pero no sale. 
+
+#22/03/2022
+
+
+```
+
+
+Antes de analisar datos: 
+hacer un correlograma. ver histogramas, la correlación, luego estan las caras de chernof. 
+Haremos una matriz de distancia 
+
+```{r}
+pay_corr <- cor(payt_conti)
+pay_corr
+pay_cov <- cov(payt_conti)
+pay_cov
+```
+
+
+```{r}
+library(permute)
+library(lattice)
+library(vegan)
+payt_cate <-  paytzini_numme[, c(3,4,5,7,8,9,10,11,13,16)]
+pay_dist <- vegdist(payt_cate, method = "jaccard")
+pay_dist
+```
+
+```{r}
+library(ggplot2)
+library(GGally)
+ggpairs(Paytzini, columns = c (2,6,12,14,15), ggplot2::aes(colour=sexo))
+ggpairs(Paytzini, columns = c (2,6,12,14,15), ggplot2::aes(colour=queretaro))
+ggpairs(Paytzini, columns = c (2,6,12,14,15), ggplot2::aes(colour=hambre))
+```
+
+Con estos no me deja, aun cuando los paso a factores o uso la variable que es numerica. 
+```{r}
+class(paytzini_num$acompaña)
+ggpairs(paytzini_num, columns = c (2,6,12,14,15), ggplot2::aes(colour=as.factor(acompaña)))
+        
+ggpairs(paytzini_num, columns = c (2,6,12,14,15), ggplot2::aes(colour=as.factor(momento_dia))
+ggpairs(paytzini_num, columns = c (2,6,12,14,15), ggplot2::aes(colour=like_postres))
+ggpairs(paytzini_num, columns = c (2,6,12,14,15), ggplot2::aes(colour=pan))
+
+```
+
+```{r}
+library(aplpack) #faces
+library(TeachingDemos) #faces2
+
+faces(paytzini_numme[ ,2:16])
+faces2 (paytzini_numme[ ,2:16])
+stars(paytzini_numme[ ,2:16])
+colMeans(paytzini_numme[ ,2:16])
+
+```
+
+Manova/anova sale significativo el precio integral y con que lo acompaña. ##PUEDO PROBAR RETIRANDO LAS 4 VARIABLES QUE SOLO OCUPAN UNA VARIABLE, Y QUIZAS AGREGAR LAS 3 QUE RETIRE, DESPUES DE TODO AQUI NO HACE RUIDO LA EDAD NI EL TIEMPO DE LA ULTIMA COMIDA. 
+```{r}
+library(dplyr)
+library(tidyverse)
+library(hrbrthemes)
+library(viridisLite)
+library(viridis)
+
+Paytzini %>%
+  ggplot( aes(x=acompaña, y=precio_integral, fill=acompaña))  +
+    geom_boxplot()
+
+# Plot
+Paytzini %>%
+  ggplot( aes(x=acompaña, y=precio_integral, fill=acompaña)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+    geom_jitter(color="black", size=0.4, alpha=0.9) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("A boxplot with jitter") +
+    xlab("Bebida complementaria")
+```
+
+En el manova sale significativo la variable categorica hambre y la variable continua valor.
+```{r}
+Paytzini %>%
+  ggplot( aes(x=hambre, y=valor, fill=hambre)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+    geom_jitter(color="black", size=0.4, alpha=0.9) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("A boxplot with jitter") +
+    xlab("")
+```
+
+Valor pan
+```{r}
+Paytzini %>%
+  ggplot( aes(x=pan, y=valor, fill=pan)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+    geom_jitter(color="black", size=0.4, alpha=0.9) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("A boxplot with jitter") +
+    xlab("")
+
+
+```
+
+edad y inter_norm
+```{r}
+ggggg <- as.data.frame(paytzini_numme)
+
+ggggg %>%
+
+  ggplot( aes(x= inte_norm , y= edad, fill= inte_norm)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+    geom_jitter(color="black", size=0.4, alpha=0.9) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("A boxplot with jitter") +
+    xlab("")
+
+class(paytzini_numme$inte_norm)
+class(Paytzini$sexo)
+
+
+prueba <- paytzini_numme as.character()
+paytzini_numme %>%
+  ggplot( aes(x=as.character(inte_norm), y=edad, fill= as.character(inte_norm)))  +
+    geom_boxplot()
+```
+
+```{r}
+
+  ggplot( aes(x= as.factor (Paytzini_domina$no_compra) , y= Paytzini$valor , fill= as.factor(  Paytzini_domina$no_compra)))  +
+    geom_boxplot()
+```
+
+
+```{r}
+anay <- aov (valor ~ pan, Paytzini)
+
+summary(anay)
+
+TukeyHSD(anay)
+```
+
+```{r}
+t.test(edad ~ inte_norm, data = paytzini_numme)
+
+t.test(valor ~ hambre, data = paytzini_numme)
+
+t.test(Paytzini$valor ~ Paytzini_domina$no_compra)
+
+```
+
+```{r}
+tabla <- table(Paytzini$acompaña, Paytzini$momento_dia)
+tabla
+tabla_por <- prop.table(tabla, margin = 1)
+tabla_por
+tabla_cent <- addmargins(tabla_por*100)
+tabla_cent
+
+colores <- c("blue", "red", "green")
+
+barplot(tabla, col = colores, beside = TRUE)
+legend("topleft", legend = c("Cafe", "Leche", "Te"), fill = colores)
+
+Contingency <- function(x) {
+    chi <- chisq.test(x)
+    unname(sqrt(chi$statistic / (chi$statistic + sum(x))))
+}
+
+Contingency (tabla)
+```
+
+
+Hotelling. No me sale nada significativo. 
+```{r}
+library(corpcor)
+library(Hotelling)
+
+pay_sexo <- Paytzini[,c(3,2,6,12,14,15)]
+pay_quere <- Paytzini[,c(4,2,6,12,14,15)]
+pay_hambre <- Paytzini[,c(5,2,6,12,14,15)]
+pay_postre <- Paytzini[,c(9,2,6,12,14,15)]
+
+#Se ponene a prueba los promedios segun la variable categorica que e designado, para cada una de las variables continua. Por ejemplo, de la variable continua valor saco el promedio con base en la clasificación sexo, de tal modo que 
+sexo_hot <- hotelling.test(.~ sexo, data = pay_sexo)
+sexo_hot
+quere_hot <- hotelling.test(.~ queretaro, data = pay_quere)
+quere_hot
+hambre_hot <- hotelling.test(.~ hambre, data = pay_hambre)
+hambre_hot
+postres_hot <- hotelling.test(.~ hambre, data = pay_hambre)
+postres_hot
+
+t.test(payt_conti$precio_normal,payt_conti$precio_integral)
+boxplot(payt_conti$precio_normal,payt_conti$precio_integral, names = c("Normal","Integral"))
+medias <- c(mean(payt_conti$precio_normal), mean(payt_conti$precio_integral))
+points(medias,pch = 18, col = "red")
+median(payt_conti$precio_normal)
+median (payt_conti$precio_integral)
+#Para conocer el codigo de una funcion se usa. El codigo fuente. 
+#getAnywhere(hotelling.stat)
+```
+
+Manova
+Unicamente es significativo en el momento del dia y el tiempo de su ultima comida, y significativo el valor que le dieron al pay con respecto a si tenian hambre o no.
+```{r}
+# Son las variables respuestas y luego es la variable independiente. 
+#Se compara la varianza entre las medias (o promedio) de diferentes grupos. determina si existe alguna diferencia entre las medias de los diferentes grupos. La prueba de hotelling hace lo mismo, pero solo cuando son 2 categorias, esta ayuda a cuando hay más de dos. 
+
+quere_man <- manova(as.matrix(payt_conti) ~ queretaro, data = Paytzini)
+summary.manova(quere_man)
+summary.aov(quere_man)
+
+hambre_man <-  manova(as.matrix(payt_conti) ~ hambre, data = Paytzini)
+summary.manova(hambre_man)
+summary.aov(hambre_man)
+
+pan_man <- manova(as.matrix(payt_conti) ~ pan, data = Paytzini)
+summary.manova(pan_man)
+summary.aov(pan_man)
+
+like_man <- manova(as.matrix(payt_conti) ~ like_postres, data = Paytzini)
+summary.manova(like_man)
+summary.aov(like_man)
+
+postres_man <-  manova(as.matrix(payt_conti) ~ postres, data = Paytzini)
+summary.manova(postres_man)
+summary.aov(postres_man)
+
+acompana_man <- manova(as.matrix(payt_conti) ~ acompaña, data = Paytzini)
+summary.manova(acompana_man)
+summary.aov(acompana_man)
+
+momento_man <- manova(as.matrix(payt_conti) ~ momento_dia, data = Paytzini)
+summary.manova(momento_man)
+summary.aov(momento_man)
+
+favorito_man <-  manova(as.matrix(payt_conti) ~ favorito, data = Paytzini)
+summary.manova(favorito_man)
+summary.aov(favorito_man)
+
+favorito_man <-  manova(as.matrix(payt_conti) ~ inte_norm, data = paytzini_numme)
+summary.manova(favorito_man)
+summary.aov(favorito_man)
+```
+
+
+
+
+```{r}
+library(ggplot2)
+library(factoextra)
+
+
+fviz_nbclust(payt_conti, kmeans, method = "wss")+
+  geom_vline (xintercept = 7, linetype = 2)
+
+
+fit4 <- kmeans(payt_conti, 4)
+fit4
+fit5 <- kmeans(payt_conti, 5)
+fit5
+fit6 <- kmeans(payt_conti, 6)
+fit6
+fit7 <- kmeans(payt_conti, 7)
+fit7
+
+plot(payt_conti$precio_normal, payt_conti$precio_integral, col = fit5[[1]], pch=c(1,2,3,4,5))
+plot(payt_conti$precio_normal, payt_conti$precio_integral, col = fit7[[1]], pch=c(1,2,3,4,5,6,7))
+
+#Por alguna razon se agrupan de una forma distinta cuando lo hacemos con la misma base en formato matriz
+#Lo que más resalto es que en ambos hay 3 variables que se terminana agrupando casi en un solo conjunto, por lo tanto quizas lo más recomenrable seria eliminar esos datos. Quizas de esa manera reduzco el numero de conjuntos y a la vez termino explicando mucho más. 
+table (fit5$cluster, Paytzini$sexo)
+table (fit5$cluster, Paytzini$queretaro)
+table (fit5$cluster, Paytzini$hambre)
+table (fit5$cluster, Paytzini$pan)
+table (fit5$cluster, Paytzini$like_postres)
+table (fit5$cluster, Paytzini$postres)
+table (fit5$cluster, Paytzini$acompaña)
+table (fit5$cluster, Paytzini$momento_dia)
+table (fit5$cluster, Paytzini$favorito)
+###Quizas deba pensar en hacer una red de interacciones para poder agruparlos y agregar una mayor cantidad de variables, aunque las mismas serian categoricas. 
+
+
+```
+
+En los cluster me indica cuantos objetos hay en cada cluster, luego me da la información de los promedios para los 4 grupos y los promedios para cada variable que describen esos objeto. Luego sigue el vector del resultado de la clusterización, se ve a que grupo se asigna cada objeto. SS es la suma de cuadrados, que nos da el total de la variación dentro de cada grupo con respecto a la variación que hay de todos los objetos, porque el resultado de la clusterización de separarlo en 4 grupos, y el valor porcentual me dice que tanta de la variación total esta explicada si hago 4 grupos, en esos valores uno se puede dar cuenta en que tan robusto es el analsiis de clasificación en que se tenga n cantidad de grupos. Cuando el valor porcentual es menor al hacer 2 clusters, se agrupa menos cantidad de varianza, que si se hacen más clusters, lo ideal de manera natural es obtener 5 grupos que se tenga cerca al 100% o 98, 
+
+
+
+
+Analisis de clasificación jerarquico
+```{r}
+fit23 <- hclust (pay_dist, "average")
+plot(fit23, hang = -1, cex = .6)
+
+#A lo mejor podria pasar algunas variables continuas a que sean leidas como categoricas, para ver como se reajusta.
+
+#hagamos uno pero con las variables continuas
+dist_conti <- vegdist(payt_conti, method = "mahalanobis")
+
+fit26 <- hclust (dist_conti, "average")
+plot(fit26, hang = -1, cex = .6)
+#ya con este metodo queda más claro que deberia eliminar al 36, 42 y 43. Aunque la razon principal es debido a la edad y por su ultima comida. 
+```
+
+
+Analisis de discriminantes
+```{r}
+library(dplyr)
+library(purrr)
+library(stats)
+library(rstatix)
+library(carData)
+library(car)
+library(tibble)
+library(bitops)
+library(rattle)
+library(rstatix)
+library(MASS)
+#visualización rapida de datos
+scatterplotMatrix(payt_conti)
+
+pay_sexo <- Paytzini[,c(3,2,6,12,14,15)]
+pay_quere <- Paytzini[,c(4,2,6,12,14,15)]
+pay_hambre <- Paytzini[,c(5,2,6,12,14,15)]
+pay_pan <- Paytzini[,c(7,2,6,12,14,15)]
+pay_like <- Paytzini[,c(8,2,6,12,14,15)]
+pay_postre <- Paytzini[,c(9,2,6,12,14,15)]
+pay_acopana <- Paytzini[,c(10,2,6,12,14,15)]
+pay_momento <- Paytzini[,c(11,2,6,12,14,15)]
+pay_favorito <- Paytzini[,c(13,2,6,12,14,15)]
+
+dis1 <- lda (sexo ~ ., data = pay_sexo)
+dis1
+dis2 <- lda (queretaro ~ ., data = pay_quere)
+dis2
+dis3 <- lda (hambre ~ ., data = pay_hambre)
+dis3
+dis4 <- lda (pan ~ ., data = pay_pan)
+dis4
+dis5 <- lda (like_postres ~ ., data = pay_like)
+dis5 #Los primeros dos discriminantes explican el 98.5% de mis variables, y son dos posiciones
+dis6 <- lda (postres ~ ., data = pay_postre)
+dis6
+dis7<- lda (acompaña ~ ., data = pay_acopana)
+dis7
+dis8 <- lda (momento_dia ~ ., data = pay_momento)
+dis8
+dis9 <- lda (favorito ~ ., data = pay_favorito)
+dis9
+
+fit_value5 <- predict(dis5)
+fit_value5
+x5 <- fit_value5$x [,1]
+y5 <- fit_value5$x[,2]
+
+fit_value4 <- predict(dis4)
+fit_value4
+x4 <- fit_value4$x [,1]
+y4 <- fit_value4$x[,2]
+
+plot(x5, y5, xlab = "Discriminante 1 (%85.53)", ylab = "Discriminante 2 (%12.96)", type = "n" )
+text(x5,y5, pay_like$like_postres, cex = 0.7, col = colores_etique_like)
+
+plot(x5, y5, xlab = "Discriminante 1 (%85.53)", ylab = "Discriminante 2 (%12.96)", type = "n" )
+text(x5,y5, labels = rownames(pay_like), cex = 0.7, col = colores_etique_like)
+
+plot(x4, y4, xlab = "Discriminante 1 (%52.51)", ylab = "Discriminante 2 (%33.18)", type = "n" )
+text(x4,y4, labels = rownames(pay_like), cex = 0.7, col = colores_etique_like)
+#El valor es lo que principalmente me ayuda a discriminar, entre menor sea, más al lado positivo se inclinara.No es una interpretación estricta. Se pueden hacer que tengan diferentes figuras y colores, segun la clasificación.
+
+#Función para poner colores
+etiqueta_like <- pay_like$like_postres
+colores_like <- function(variable)
+{
+  if(length(grep("encanta", variable)))
+  {"red"}
+  else if (length(grep("disfruto", variable)))
+  {"blue"}
+  else if (length(grep("consumo", variable)))
+  {"pink"}
+  else
+  {"purple"}
+}
+colores_etique_like <- unlist(lapply(etiqueta_like, colores_like))
+
+
+
+
+```
+
+
+```{r}
+library(rattle)
+library(ggplot2)
+library(randomForest)
+#Me interesa saber que es lo que más determina el que una persona le de un valor de 10 a mis pays, para que finalmente realice una compra. 
+
+foret1 <- randomForest(valor ~., payt_conti, importance = T, proximity = T)
+foret1 #se hizo un random forest de regresión, porque es una variable continua, por default se hicieron 500 arboles o 500 remuestreos, si se agrega el argumento ntree puedes decidir el numero de arboles. Luego nos dice el numero de variables que utiliza para partir cada nodo, entonces si es sencillo se usa una variable para cada nodo, porque es la variable altura y asi sucesivamente, por default nos da el numero de variables dada la raiz cuadrada de las variables que se tienen, entonce se usa 1 variable para cada nodo y dar una decisión. Esta la escoge al azar, y para cada árbol se usa 1 variable y al final nos da una decisión, y de todos los resultados me da el más frecuente. 
+plot(foret1)
+#Hay una estimación de la tasa de error del modelo, y puedo saber que tan bueno es para hacer la clasificación y me dice por ejemlo que hay x cantiadad de erro. #no me sale aqui, como algunos remuesteos son con remplzazo, algunos pueden repetidos o incluso quituplicados, se hacen 500 remuestreos con remplazo de los originales, algunas opcines se quedan fuera de la bolsa, pero por remuetreo tendre 81 muestras. el error se estima con aquellos que se quedaron afuera. cuando es de clasificación si sale el % y a parte puedo ver con base en la matriz de confusión en que es que se equivoco al hacer la clasificación, pero no me deja hacerlo ;c. Con el plot se puede ver que tan bueno es el modelo, y esta hecho con 500 arboles, entonces como saber si 500 es ideal, pues si se estandariza en un punto, implica que no es necesario hacer más, y se puede ver el error del modelo, para saber si se modifica uno u otro, 
+foret3 <- randomForest(as.factor(valor) ~., payt_conti, importance = T, proximity = T)
+foret3 
+plot(foret3)
+#Quiero que me calcule la importancia de cada una de las variables, que tan importante es cada variable para preceir que ese objeto lo va a clasificar como un valor de 9 o 10, etc, y cual es la proximidad. Entonces se puede saber en que punto se estandariza y que ta no es necesario o si hacer mpas remuestreo. Pero incluso puede aumentar el error, y puede que con 500 sea mejor que con 1000. 
+
+#De esta manera podre saber que variables contribuyen para saber si venderle el pay o no. 
+pay_like
+pay_like2 <- paytzini_num[,c(8,2,6,12,14,15)]
+
+foret2 <- randomForest(as.factor(like_postres) ~., pay_like2, importance = T, proximity=T)
+foret2
+plot(foret2)
+
+foret5 <- randomForest(as.factor(like_postres) ~., pay_like2, importance = T, proximity=T, mtry=1, ntree=1000)
+foret5
+plot(foret5)
+
+foret6 <- randomForest(as.factor(like_postres) ~., pay_like2, importance = T, proximity=T, mtry=5)
+foret6
+plot(foret6)
+
+#Para ahcer varias pruebas y obtener la cantidad de variables con el menor porcentaje de error
+#Ciclo for, loop con un numero de variable diferente
+no_variable <- vector (length = 5) #5, porque son las variables que uso en pay_like2 continuas
+for (i in 1:5){
+  modelo_rf <- randomForest(as.factor(like_postres) ~.,pay_like2,mtry = i, ntree=500)
+  no_variable [i] <- as.data.frame (modelo_rf$err.rate  [500, 1])
+}
+no_variable
+
+#CON ESTO PODEMOS SABER QUE CON 1 DECISION POR NODO YA QUEDO
+
+#Abajo de Farell
+
+matriz_foresteada <- 0
+for(i in c(1:5)){
+  foresteado <- randomForest(as.factor(like_postres) ~., pay_like2, importance = T, proximity=T, mtry=i)
+  arbol_foresteado <- as.data.frame(foresteado[4])[500,1]
+  matriz_foresteada<-rbind(matriz_foresteada, arbol_foresteado)
+}
+matriz_foresteada
+
+plot(matriz_foresteada)
+
+#Ahora sí funciono, y es mejor en solo 1 variable que se tome. 
+
+#probamos para variable continua, a ver si sale.
+matriz_foresteada <- 0
+for(i in c(1:4)){
+  foresteado <-  randomForest(valor ~., payt_conti, importance = T, proximity = T, mtry=i)
+  arbol_foresteado <- as.data.frame(foresteado[4])[500,1]
+  matriz_foresteada<-rbind(matriz_foresteada, arbol_foresteado)
+}
+matriz_foresteada
+
+#Con esto podemos determinar que con 1000 obtenemos el menor error posible, con otro valores igual, pero con 1000 esta bien.
+no_variable <- vector (length = 2000) #5, porque son las variables que uso en pay_like2 continuas
+for (i in 1:2000){
+  modelo_rf <- randomForest(as.factor(like_postres) ~.,pay_like2,mtry = 1, ntree=i)
+  no_variable [i] <- as.data.frame (modelo_rf$err.rate  [i, 1])
+}
+no_variable
+length(no_variable)
+View(no_variable)
+prue <- as.matrix(no_variable)
+View(prue)
+
+#Uno quiere minimizar el error para cada una de las clasificaciones y por eso al final pone el promedio que es el negro, uno lo que buscaria es que el negro este pegado al cero, pero eso querria decir que es un modelo perfecto, es como si la R2 fuera de 1 y en biologia no sucede. 
+#Error minimo, se estabilice para las diferentes categorias o niveles de clasificación. 
+```
+
+
+Permanova
+```{r}
+#Por redactar
+
+```
+
+PCA
+```{r}
+library(ggplot2)
+payt3_conti <- as.matrix(payt_conti)
+PCA_2 <- prcomp (payt3_conti, scale. = T, center = T)
+PCA_2
+summary (PCA_2)
+screeplot(PCA_2) #Grafica de acantilado
+biplot(PCA_2)
+
+library(factoextra)
+# Puede graficar varias tipos de graficas
+gr_pay_pca <- fviz_pca_biplot(PCA_2, geom = "point", habillage = paytzini_numme$inte_norm , addEllipses = T)
+gr_pay_pca
+
+gr_pay_pca1 <- fviz_pca_biplot(PCA_2, geom = "point", habillage = Paytzini$hambre, addEllipses = T)
+gr_pay_pca1
+
+gr_pay_pca2 <- fviz_pca_biplot(PCA_2, geom = "point", habillage = Paytzini$pan, addEllipses = T)
+gr_pay_pca2
+
+gr_pay_pca3 <- fviz_pca_biplot(PCA_2, geom = "point", habillage = Paytzini_domina$no_compra, addEllipses = T)
+gr_pay_pca3
+#Se requiere hacer un analisis para corroborar que no es significativa la diferencia, esto no remplaza una prueba estadistica. Se pueden hacer analisis de similitud anosim y el otro es hacer un permanova, es una anova usando permutaciones. y eso te perimte tener como respuesta una matriz, puede ser una matriz de varianza-covarianza o de corelaciones para hacer un permanova o puede ser de distancia para hacer un analisis de simlitud y eso sí puede dar un valor de p, etc. Lo ideal es hacer un PCA, y eso acompañarlo con el analisis de la prueba estadistica, y muchos hacen la figura y y pone una nota el resultado del permanova o tal para tener en una misma grafica las dos cosas. Uno siempre le cree al resultado. Si es muy contrastante es mejor revisar si no hubo algun error. 
+```
+
+
+```{r}
+#ggplot (data = Paytzini, aes(x= pan, y = valor, color = pan)) +
+#  geom_boxplot() +
+#  theme_bw
+```
+
+
+Analisis de factores
+```{r}
+model2_fa <- factanal(payt_conti, factors =2)
+model2_fa
+```
+```{r}
+library(ggplot2)
+library(psych)
+base1 <- cov(payt_conti)
+base1
+model2 <- fa(base1, 2, fm = "wls", rotate = "varimax") #Ejemplo con diferentes fm y factores.
+#El primer argumento van los datos, luego se pone que metodo quiere uno el wls es de los cuadrados medios (Creo que supone una gaussiana), y hay otros, como el ols, o los gls que es minimos cuadrados generalizados, o pa como el de compontes princiales, o ml que es con maxima verisimilitud, o minchi que hace el minomo de tamaño de muestra pondarizado. Y se pide que haga la rotación de los ejes, como en el de cordenadas principales. Nos arroja cuanto es la proporcion de varianza explicado, y la preuba de hipotesisi para que 2 es suficiente, y la tasa de la matriz del modelo. el simbolo de h2 indica que algo que LUEGO EXPLICA, SEGUN. 
+print(model2, sort = T)
+```
+
+```{r}
+Paytzini_domina <- Paytzini_dominal [,c(3:38)]
+View(Paytzini_domina)
+
+datos <- margin.table(HairEyeColor, 1:2) #Quiero juntar las dos tablitas para tener los datos 
+datos
+library(ca)
+
+model1 <- ca (Paytzini_domina)
+model1
+plot(model1)
+```
+
+
+```{r}
+no_quere <- manova(as.matrix(payt_conti) ~ no_compra, data = Paytzini_domina)
+summary.manova(no_quere)
+summary.aov(no_quere)
+```
+
+```{r}
+quere <- manova(as.matrix(payt_conti) ~ compra, data = Paytzini_domina)
+summary.manova(quere)
+summary.aov(quere)
+```
+
+Separamos la base de datos entre los que compran y los que no compran
+```{r}
+data_sep <- split(Paytzini_domina, f= factor (Paytzini_domina$no_compra))
+
+View (data_sep$`0`)
+
+```
+
+```{r}
+data_no_quere <- data_sep$`1`
+View(data_no_quere)
+data_no_quere <- as.matrix(data_no_quere)
+data_no_querea <- data_no_quere [, c(-4, -13, -14, -31)]
+
+
+View(data_no_querea)
+
+model5 <- ca (data_no_querea)
+model5
+plot(model5)
+```
+
+```{r}
+gr_pay_pca5 <- fviz_ca_biplot(model1, repel = T)
+gr_pay_pca5
+
+gr_pay_pca6 <- fviz_ca_col(model5, repel = T)
+gr_pay_pca6
+```
+

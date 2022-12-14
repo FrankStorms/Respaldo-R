@@ -1,0 +1,199 @@
+---
+title: "Cheat Sheet"
+author: "Francisco Alfonso Perez Storms"
+date: "28/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+```{r}
+medidas_microA <- read.csv("~/medidas_micro.csv", dec=",")
+View(medidas_microA)
+class(medidas_microA)
+as.matrix(medidas_microA)
+library(aplpack)
+faces(medidas_microA)
+f1 <- medidas_microA [,3:16]
+faces(f1)
+
+library(TeachingDemos)
+faces2(f1)
+help(faces2)
+
+f2 <- medidas_microA [,2:16]
+Objeto <- f2[order(f2$sexo) ]
+attach ( "  matriz  " )
+faces  ( rbind  ( " renglones " ,  " columnas " )
+detach ( " matriz " )
+
+-Separar por sexo en la misma base nombre*<-sort(objeto$nombre de columna con variable discreta) *Con c(Se,pueden,poner,varias,columnas)
+
+obj <- sort(medidas_microA$sexo)
+as.data.frame(obj)
+attach(obj)
+faces(rbind(obj[,3:16])
+detach(obj)
+-Ver acomodo objeto*
+-Seleccionar objeto attach(objeto*)
+-Visualizar faces(rbind(poner:los,numeros:de,columna:correspondientes,a:la,variable:discreta,segun:el,acomodo))
+-Dejar de usar objeto detach(objeto*)
+
+faces2(medidas_microA [,3:16], fill=medidas_microA$sexo)
+
+
+library(TeachingDemos)
+mediciones_org<-sort(medidas_microA$sexo) # Se puede ordenar por 2 o + formas : c(sexo, altura),
+# ascedente, decediente 
+mediciones_org
+mediciones_org<-as.data.frame(mediciones_org)
+attach(mediciones_org)
+faces(rbind(1:35,36:81))
+detach(mediciones_org)
+
+stars(medidas_microA)
+```
+
+```{r}
+medidas_microA
+cor(f1) -> f2
+cov(f1) -> f3
+f3
+library(corrgram)
+vars2 <- c("altura", "largo_brazoD", "largo_piernaD", "largo_pieD", "ancho_espalda", "cuello", "cabeza", "separacion_ojos", "largo_boca", "ancho_nariz", "largo_orejaD", "largo_cara", "ancho_frente", "largo_surco_nl" )
+corrgram(medidas_microA[,vars2], order = T, lower.panel = panel.shade, upper.panel = panel.pie, text.panel = panel.txt, diag.panel = panel.minmax, main = "Correlación")
+
+corrgram(f3, order = T, lower.panel = panel.shade, upper.panel = panel.pie, text.panel = panel.txt, diag.panel = panel.minmax, main = "Correlación")
+
+corrgram(f2, order = T, lower.panel = panel.shade, upper.panel = panel.pie, text.panel = panel.txt, diag.panel = panel.minmax, main = "Correlación")
+
+library(stats)
+
+dist(f2)
+dist(f3) -> m2
+dist(f1) -> m1
+class(m2)
+heatmap(m2)  
+
+install.packages(vgd)
+library(permute)
+library(lattice)
+library(vegan)
+
+
+vgdis (f1, method = )
+
+m42 <- vegdist(f1, method = "euclidean", upper = T )
+
+heatmap(m42)
+
+help("vegdist")
+
+library(ggplot2)
+
+heatmap (m41)
+class (m42)
+m41 <- as.matrix(m42)
+ggplot(heatmap (m42))
+
+library(Hotelling)
+library(corpcor)
+
+m98 <- mediciones_org[1:35,]
+m89 <- mediciones_org[36:81,]
+class(m98)
+m98 <- as.matrix(m98)
+class(m98)
+mediciones_org
+hotelling.stat( mediciones_org[1:35,] , mediciones_org[36:81,] )
+hotelling.stat( , )
+
+
+-Cargar librerias corpcor, Hotelling
+-nombre*<-hotelling.stat(objeto[ a:b,a:b], objeto [c:d,a:b])*Segun la base de datos, puede que se requiera hacer antes un acomodo de las varaibles como en la sesción "Para separar por las variables discretas de una columna "
+-Visualizar objeto*
+-nombre<-hotelling.test(objeto[ a:b,a:b], objeto [c:d,a:b])
+-Otro modo nombre <- hotelling.test(.~nombre_de_columna, data = objeto) *El "." representa el resto de columnas
+
+
+f67 <- medidas_microA [,2:16]
+
+f68 <- as.matrix(f67)
+class(f67)
+
+PTMtest <- hotelling.stat(.~sexo, data = f67)
+PTMtest
+
+Test2 <- hotelling.stat(medidas_microA[ 1:35,3:16], medidas_microA [36:81,3:16])
+Test2
+
+stat2 <- hotelling.test(medidas_microA[ 1:35,3:16], medidas_microA [36:81,3:16], shrinkage = T, perm = T)
+stat2
+
+PTMtest1 <- hotelling.test(.~sexo, data = f67)
+PTMtest1
+
+summary(stat2)
+summary(Test2)
+
+manova( .~sexo, data = f68)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,663 @@
+---
+title: "Modelaje de Enfermedades Infecciosas"
+author: "Segundo Examen Parcial"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    toc_float: true
+    fig_height: 3
+    fig_width: 5
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+```{r}
+library(deSolve)
+```
+
+
+# Selección
+
+Considera dos poblaciones $x(t)$ y $y(t)$ 
+
+1. Si las pobalciones no interactuan las ecuaciones que gobierna al sistema son:
+$$\dot x(t)=ax$$
+$$\dot y(t)=by$$
+
+No entiendo, porque entiendo que al sacar la derivada obtendria
+$$\ x(t)=a$$
+$$\ y(t)=b$$
+
+Más me piden esto:
+con $a,b >0$ 
+Demuestra que la soluciones son 
+
+$$\ x(t)=x_0e^{at}$$
+
+$$\ y(t)=y_0e^{bt}$$
+con $x_0$ y $y_0$ las poblaciones iniciales.
+
+X_0 y y_0 representaria la cantidad con que iniciarian en el primer momento, luego se eleva exponencialmente con respecto a el valor a o b respectivamente multiplicado por el tiempo. De esta manera podemos obtener un resultado de la población a la temporalidad que deseemos asi sea el tiempo 1, 2, 8, etc. Tomando como ejemplo a x, lo podemos graficar de la siguiente manera.
+
+
+```{r}
+x <- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      x <- a*x
+
+       list(c(x))
+
+
+     })
+
+
+}
+```
+
+```{r}
+pars1 <- c(a=2) 
+
+
+condiciones_iniciales1 <- c(x = 8 )
+
+
+tiempo1 <- seq(0, 15, by = 0.001)
+
+
+out1 <- ode(condiciones_iniciales1, tiempo1, x, pars1)
+
+
+matplot(out1[ , 1], out1[ , 1:2], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "x", lwd = 2)
+
+
+legend("topright", c("x"), col = 1:3,lty=1:3,cex=0.5)
+
+```
+se apreciaria igual si graficaramos y
+
+2. Construye la siguiente variable 
+$$\rho(t)$$
+
+$$\rho(t)= \frac{x(t)}{y(t)}$$
+
+Demuestra que esa la derivada de esa ecuación se puede poner como:
+
+$$\dot \rho= (a-b)\rho$$
+Sugerencia: utiliza la regla de la derivada de un cociente.
+
+$$\rho(t)= \frac{t*y(t)-x(t)*t}{y(t)^2}$$ 
+$$\rho(t)= \frac{y-x}{y}$$ 
+No entiendo como avanzar a partir de aqui. Especialmente no entiendo de donde sale la a, la -b, y rho tampoco aunque como es la función de rho supongo que ha de tener alguna razon. Creo que la a y b salen de las ecuaciones del problema 1, lo cual le daria sentido a a - b = y-x, pero aun no queda claro de donde sale el que se multiplique por rho.
+
+3. Demuestra que la solcuión de la  ecuación  anterior es:
+
+$$\rho(t) =\rho_0e^{(a-b)*t}$$
+Supongo que se aplica el mismo principio que en el primer ejercicio, mismo que al final sera muy sencillo, pero sinceramente no entiendo.
+rho0 representaria la cantidad con que iniciarian en el primer momento, luego se eleva exponencialmente con respecto a el valor a - b respectivamente multiplicado por el tiempo, para que de esa manera se pueda apreciar el crecimiento con respecto vaya avanzando el mismo, y asi obtener la cantidad de invidividuos al tiempo 1, 2, 8, etc.
+
+4. A partir de esta solución demuestra que:
+ - Si $a>b$ entonces $\rho(t)$ tiende a infinito y por lo tanto la población x elimina a la población y.Es decir x se selecciona sobre y
+ - Si $a<b$ entonces $\rho(t)$ tiende a cero y por lo tanto la población y elimina a la población x.Es decir y se selecciona sobre x.
+
+En este primero se demuestra que tiende a infinito rho, cuando a es mayor que b
+```{r}
+rho <- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      rho <- (a - b)*rho
+
+       list(c(rho))
+
+
+     })
+
+
+}
+```
+
+En este primero se demuestra que tiende a infinito rho, cuando a es mayor que b
+```{r}
+pars2 <- c(a=2, b=5) 
+
+
+condiciones_iniciales2 <- c(rho = 8 )
+
+
+tiempo2 <- seq(0, 15, by = 0.001)
+
+
+out2 <- ode(condiciones_iniciales2, tiempo2, rho, pars2)
+
+
+matplot(out2[ , 1], out2[ , 1:2], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "rho", lwd = 2)
+
+
+legend("topright", c("rho"), col = 1:3,lty=1:3,cex=0.5)
+
+```
+
+Aqui se demuestra que rho tiende a cero si b es mayor que a
+```{r}
+pars3 <- c(a=5, b=2) 
+
+
+condiciones_iniciales3 <- c(rho = 8 )
+
+
+tiempo3 <- seq(0, 15, by = 0.001)
+
+
+out3 <- ode(condiciones_iniciales3, tiempo3, rho, pars3)
+
+
+
+
+
+
+matplot(out3[ , 1], out3[ , 1:2], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "rho", lwd = 2)
+
+
+legend("topright", c("rho"), col = 1:3,lty=1:3,cex=0.5)
+
+```
+# Estadio asintomático
+
+
+Las siguientes ecuaciones describen un modelo por compartimentos de una enfermedad infecciosa  con un estadio asintomático.
+$$\dot S = \nu -\beta S(I +qA)-\mu S$$
+$$\dot E= \beta S(I+qA) -(\eta+\mu)E $$
+$$\dot I = p\eta E -(\alpha +\mu)I$$
+$$\dot A= (1-p)\eta E -(\gamma +\mu)A$$
+$$\dot R=\alpha I +\gamma A-\mu R$$
+
+1. Dibuja el esquema por compartimentos que representa este conjunto de ecuaciones
+2. Explica el significado de cada ecuación: es decir, explica el significado de cada término y cada parámetro. ¿Existen parámetros que están acotados, si es así indica el intervalo en donde pueden variar?
+Términos
+S: Susceptibles
+E: Expuestas
+I: Infectadas
+A: Asintomáticas
+R: Recuperadas 
+
+Parámetros
+nu: Es la tasa de vida (Valor 0-1)
+mu: Es la tasa de muerte (Valor 0-1)
+beta: Es la tasa de exposición (Valor 1/(0-inf))
+q: Como el efecto de los asintomaticos esta atenuado, este parametro determina la atenuación a la tasa de exposición (Valor 0-1)
+eta: Es la tasa de infección/asintomáticos (Valor 1/(0-inf))
+p: Como una vez terminado el periodo de exposición es forzosa su salida hacia el termino I o A, este parametro determina la porción de expuestos que se dirigira a I y colateralmente se determinara la porción que se dirigira a A  (Valor 0-1)
+alfa: Es la tasa de recuperación de los infectados (Valor 1/(0-inf))
+gama: Es la tasa de recuperación de los asintomáticos (Valor 1/(0-inf))
+*(0-inf) es la cantidad de días según sea el caso
+
+3. ¿Bajo qué condiciones la población se conservaría?
+La población se conserva cuando el conjunto de mu de cada uno de los términos es igual a la nu que ingresa.
+
+4. Encuentra, si existe, el punto de equilibrio *free-disease*  
+
+5. ¿Qué tipo de enfermedad puede estar describiendo? Justifica tu respuesta.
+Puede estar describiendo el SARSCOV2, porque se describe la etapa susceptible, la etapa en el cual se expone el individuo más no es infeccioso (incubación), luego se dirigen a infectados o asintomáticos, que era muy común durante la pandemia y que se demostraba por medio de las pruebas de PCR positivos a la par de la falta de síntomas y signos, y finalmente los recuperados los cuales no vuelven a ser susceptibles, aunque ese 100% de inmunidad no se puede asegurar para el SARSCOV2.
+
+6. Selecciona un conjunto de parámetros adecuados y resuelve numéricamente el sistema de ecuaciones diferenciales. Asegurate que tu solución alcance un punto de equilibrio. Discute tu resultado.
+
+Modelo SEIAR
+
+```{r}
+SEIAR <- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      dS<- nu*(S+E+I+A+R) - beta*S*(I + q*A) - mu*S
+
+
+      dE<- beta*S*(I + q*A) - (eta + mu)*E
+
+
+      dI<- eta*p*E - (alfa + muI)*I
+      
+      
+      dA<- (1 - p)*eta*E -(gama + mu)*A
+
+
+      dR<- alfa*I + gama*A - mu*R
+
+
+       list(c(dS, dE, dI, dA, dR))
+
+
+     })
+
+
+}
+```
+
+Los valores son con base en la pagina del ultimo ejercicio; q es inventado, p obtenido de https://scielosp.org/article/rcsp/2020.v46suppl1/e2707/es/ (quizas se podria usar lo que corresponde a rho grave), para recuperación lo tomamos para ambos 14 dias. Agregaremos un parametro extra que represente las muertes de los infectados. Al día de hoy hay al rededor de 8mil casos de infectados, y como casi debebe haber el doble de asintomaticos sera lo que colocaremos. En recuperados agregaremos 7.13M que han sido los casos registrados (no contavilizaremos a los vacunados). Se tuvo que agregar a la nalidad la multiplicación con toda la población para que la muerte no empujara a todos los terminos a 0.
+```{r}
+pars4 <- c(nu=.2, mu=.20, muI=.23, beta= 1/2.9, q=.4, eta=1/5.2, p=.542, alfa=1/14, gama=1/14) 
+
+
+condiciones_iniciales4 <- c(S = 15000000, E=16000, I=8000, A=8000 ,R=7130000)
+
+
+tiempo4 <- seq(0, 15, by = 0.001)
+
+
+out4 <- ode(condiciones_iniciales4, tiempo4, SEIAR, pars4)
+
+
+
+matplot(out4[ , 1], out4[ , 1:6], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "SEIAR", lwd = 2)
+
+
+legend("topright", c("Susceptible", "Expuesto", "Infectado", "Asintomatico", "Recuperado"), col = 1:3,lty=1:3,cex=0.5)
+
+```
+No me es posible identificar bien que lineas corresponden a cada termino, en mi computadora salen algunas tendencias en azul, pero en el recuadro no hay ninguna que corresponda a los azules. Pero creo que son los suceptibles los que disminuyen, luego los recuperados igual disminuyen y casi en misma proporción, lo que podria decir que tiene que ver más con la mortalidad que porque cambien de compartimento, en cambio los infectados, asintomaticos y expuestos aumentan casi empatando con los recuperados. Que se podria decir es el punto de equilibrio, mismo que indica que el patogeno se mantendra presenta en la población.
+
+# Estadio crónico 
+
+Las siguientes ecuaciones describen un modelo por compartimentos de una enfermedad infecciosa  con un estadio crónico.
+$$\dot S = \nu -\beta S(I +qC)-\mu S +\rho R$$
+$$\dot C= \beta S(I+qC) -(\eta+\gamma +\mu)C $$
+
+$$\dot I = \eta C -(\alpha +\mu)I$$
+$$\dot R= \alpha I +\gamma C -(\mu +\rho)R$$
+
+
+
+1. Dibuja el esquema por compartimentos que representa este conjunto de ecuaciones
+
+2. Explica el significado de cada ecuación: es decir, explica el significado de cada término y cada parámetro. ¿Existen parámetros que están acotados, si es así indica el intervalo en donde pueden variar?
+ Términos
+S: Susceptibles
+C: Estado crónico
+I: Infectadas
+R: Recuperadas 
+
+Parámetros
+nu: Es la tasa de vida (Valor 0-1)
+mu: Es la tasa de muerte (Valor 0-1)
+beta: Es la tasa de estado crónico (Valor 1/(0-inf))
+q: Como el efecto de los cronicos esta atenuado, este parametro determina la atenuación a la tasa de exposición  (Valor 0-1)
+eta: Es la tasa de infección (Valor 1/(0-inf))
+alfa: Es la tasa de recuperación de los infectados (Valor 1/(0-inf))
+gama: Es la tasa de recuperación de los crónicos (Valor 1/(0-inf))
+ro: Es la tasa que vuelve a susceptible ((Valor 1/(0-inf))
+*(0-inf) es la cantidad de días según sea el caso
+
+3. ¿Bajo qué condiciones la población se conservaría?
+La población se conserva cuando el conjunto de mu de cada uno de los términos es igual a la nu que ingresa.
+
+4. Encuentra, si existe, el punto de equilibrio *free-disease*  
+
+5. ¿Qué tipo de enfermedad puede estar describiendo? Justifica tu respuesta. 
+A lo mejor podría usarse para modelar la malaria, solo que habría que agregar una flecha de susceptibles a infectados, porque no todos pasan forzosamente por el estado crónico. Aun cuando ya hay iniciativas de vacunas, es común que las personas vuelvan a ser susceptibles después del periodo de recuperación. 
+
+
+6. Selecciona un conjunto de parámetros adecuados y resuelve numéricamente el sistema de ecuaciones diferenciales. Asegurate que tu solución alcance un punto de equilibrio.Discute tu resultado. 
+Modelo SCIR
+```{r}
+SCIR <- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      dS<- nu*(S+C+I+R) - beta*S*(I + q*C) + ro*R - mu*S
+
+
+      dC<- beta*S*(I + q*C) - (eta + gama + mu)*C
+
+
+      dI<- eta*C - (alfa + mu)*I
+
+
+      dR<- alfa*I + gama*C - (mu + ro)*R
+
+
+       list(c(dS, dC, dI, dR))
+
+
+     })
+
+
+}
+```
+
+Los valores son casi inventados en su totalidad porque no hay uan temporalidad definida, pero a partir de la logica de otras enfermedades, beta es 15 porque es el tiempo promedio en que el organismo genera inmunidad, q es casi la midad de efectividad, ro es el periodo que puede llegar a durar una inmundiad de corto tiempo, eta es el tiempo en que una enfermedad puede pasar a ser infecciosa, alfa es lo que suelen demorar en recuperarse si les dio la infección y gama si no tuvo que pasar a ser infeccioso. https://medlineplus.gov/spanish/ency/article/000621.htm 
+```{r}
+pars6 <- c(nu=.2, mu=.2, beta=1/15, q=.4, ro=1/60, eta=1/7, alfa=1/5, gama=1/15) 
+
+
+condiciones_iniciales6 <- c(S =15000000, C=900000, I=400000, R=1000000)
+
+
+tiempo6 <- seq(0, 15, by = 0.001)
+
+
+out6 <- ode(condiciones_iniciales6, tiempo6, SCIR, pars6)
+
+matplot(out6[ , 1], out6[ , 1:5], type = "l", xlab = "tiempo", ylab = "Población",
+
+main = "SCIR", lwd = 2)
+
+legend("topright", c("Susceptible", "Cronico", "Infectado", "Recuperado"), col = 1:3,lty=1:3,cex=0.5)
+```
+Al rededor de los 10 años ya se estabiliza, los suceptobles bajan notoriamente y el resto aumenta un poco, especialmente los recuperados crecen con notalidad, porque acepta tanto de los cronicos como de los infectados. 
+
+# Estadio de inmunidad pasiva
+
+La inmunidad pasiva consiste en la transferencia de inmunidad activa en la forma de anticuerpos de un individuo  a otro.La inmunidad pasiva puede suceder de forma natural, por ejemplo, por la vía materna al feto a través de la placenta o al bebé vía la leche materna. El estadio de inmunidad pasiva se denota por la variable $M(t)$ y se añade al sistema antes de que los individuops sean suceptibles. El siguiente modelo **MSIR** se describe con las siguientes ecuaciones diferenciales.
+
+
+$$\dot M = \nu -\rho M- \mu M$$
+$$\dot S= \rho M -\beta SI-\mu S $$ 
+$$\dot I = \beta SI -(\alpha +\mu)I$$
+
+$$\dot R= \alpha I -\mu R$$ 
+
+
+1. ¿Bajo qué condiciones se puede inducir de forma artificial la inmunidad pasiva?
+ Se puede inducir de manera artificial al inyectar el plasma de una persona inmune a una persona sin inmunidad, de esta forma los anticuerpos harán su función en el cuerpo de otra persona.
+ 
+2. Dibuja el esquema por compartimentos que representa este conjunto de ecuaciones
+
+3. Explica el significado de cada ecuación: es decir, explica el significado de cada término y cada parámetro. ¿Existen parámetros que están acotados, si es así indica el intervalo en donde pueden variar?
+Términos
+M: Con inmunidad pasiva
+S: Susceptibles
+I: Infectados
+R: Recuperados 
+
+Parámetros
+nu: Es la tasa de vida (Valor 0-1)
+mu: Es la tasa de muerte (Valor 0-1)
+ro: Es la tasa de pérdida de la inmunidad pasiva (Valor 1/(0-inf)
+beta: Es la tasa de exposición (Valor 1/(0-inf))
+alfa: Es la tasa de recuperación de los infectados (Valor 1/(0-inf))
+*(0-inf) es la cantidad de días según sea el caso
+
+4. ¿Bajo qué condiciones la población se conservaría?
+La población se conserva cuando el conjunto de mu de cada uno de los términos es igual a la nu que ingresa.
+
+5. Encuentra, si existe, el punto de equilibrio *free-disease*  
+
+6. ¿Qué tipo de enfermedad puede estar describiendo? Justifica tu respuesta. 
+Al usar un modelo general como lo es el SIR, pude ser usado para casi cualquier enfermedad de la cual la madre ya poseen inmunidad, sin embargo, como no hay más compartimentos, lo más probable es que sea una enfermedad de la que sí o sí el individuo se infectó en alguna etapa de su vida y de la cual se genera inmunidad de por vida, en ese sentido, este modelo podría ayudarnos a modelar el sarampión.
+
+7. Selecciona un conjunto de parámetros adecuados y resuelve numéricamente el sistema de ecuaciones diferenciales. Asegurate que tu solución alcance un punto de equilibrio.Discute tu resultado.
+Modelo MSIR
+```{r}
+MSIR<- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      dM<- nu*(M+S+I+R) - ro*M- mu*M
+
+
+      dS<- ro*M - beta*S*I - mu*S
+
+
+      dI<- beta*S*I - (alfa + mu)*I
+
+
+      dR<- alfa*I - mu*R
+
+
+       list(c(dM, dS, dI, dR))
+
+
+     })
+
+
+}
+```
+
+al año nacen cerca de 1.5 millones de bebes, si da en promedio a los niños de 5 años, podemos decir que 12 M son S, luego al año hay cerca de 200mil muertes que es al rededor del 50%, entonces infectados deben ser el doble y en R esta el resto de la población en general adulta.
+La inmundiad de la madre suele permanecer hasta las 10 semanas, la incubación es de 14 dias y los sintomas duran al rededor de 5 días. https://cuidateplus.marca.com/enfermedades/infecciosas/sarampion.html 
+```{r}
+pars7 <- c(nu=.2, mu=.2, ro=1/70, beta= 1/14, alfa=1/5) 
+
+
+condiciones_iniciales7 <- c(M =150000, S=6000000, I=400000,R=14000000)
+
+
+tiempo7 <- seq(0, 20, by = 0.001)
+
+
+out7 <- ode(condiciones_iniciales7, tiempo7, MSIR, pars7)
+
+
+
+
+
+
+matplot(out7[ , 1], out7[ , 1:4], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "MSIR", lwd = 2)
+
+
+legend("topright", c("I. materna", "Susceptible", "Infectado", "Recuperado"), col = 1:3,lty=1:3,cex=0.5)
+```
+Los suceptobles tienen un crecimiento exponencial, y el resto de valores tienden a cero, lo que podria indicar que en algun momento se terminaria terminando la enfermedad de la población, aunque eso no es cierto, más bien deberia llegar a un punto de equilibrio con endenismo de la enfermedad
+
+#  Tratamiento
+
+Considera el sigueinte conjunto de ecuaciones diferenciales que describen una enfermedad infecciosa con individuos en tratamiento $T(t)$.
+
+$$\dot S = \nu -\beta_1 \frac{SI}{N}- \mu S$$ 
+$$\dot E= \beta_1\frac{SI}{N} + \beta_2 \frac{TI}{N}-(\mu +\kappa +r_1)E +pr_2I $$
+$$\dot I = \kappa E-(r_2+\mu)I $$ 
+$$\dot T = r_1E +qr_2I -\beta_2\frac{TI}{N}-\mu T$$ 
+
+con $N(t)=S(t)+E(t)+I(t)+T(t)$
+1. Dibuja el esquema por compartimentos que representa este conjunto de ecuaciones
+
+2. Explica el significado de cada ecuación: es decir, explica el significado de cada término y cada parámetro. ¿Existen parámetros que están acotados, si es así indica el intervalo en donde pueden variar?
+Términos
+S: Susceptibles
+E: Expuestas
+I: Infectadas
+T:Tratamiento
+
+Parámetros
+nu: Es la tasa de vida (Valor 0-1)
+mu: Es la tasa de muerte (Valor 0-1)
+beta1/2: Es la tasa de exposición con respecto a los susceptibles y en tratamiento (Valor 1/(0-inf))
+kappa: Es la tasa de infección (Valor 1/(0-inf))
+r1: Es la tasa de tratamiento de los expuestos
+r2: Es la tasa de estabilización de los infectados (valor 1/(0-inf)); p expuestos (valor 0-1), q por tratamiento (valor 0-1), cuando p + q = 1
+*(0-inf) es la cantidad de días según sea el caso
+
+3. ¿Bajo qué condiciones la población se conservaría?
+La población se conserva cuando el conjunto de mu de cada uno de los términos es igual a la nu que ingresa.
+
+4. Encuentra, si existe, el punto de equilibrio *free-disease*  
+
+5. ¿Qué tipo de enfermedad puede estar describiendo? Justifica tu respuesta. 
+Es una enfermedad que solo puede ser tratada cuando la persona está expuesta o infectada, el paciente nunca vuelve al grupo de susceptibles lo que implica que se mantiene siempre con el patógeno. Por lo tanto, este modelo puede ser usado para VIH. Además de que hay un flujo constante entre infectado, expuesto y en tratamiento. Agregado a que para que las personas comiencen a estar expuestas es dependiente de la frecuencia en relación a la necesidad de la relación sexual para contagiarse.
+ 
+6. Selecciona un conjunto de parámetros adecuados y resuelve numéricamente el sistema de ecuaciones diferenciales. Asegurate que tu solución alcance un punto de equilibrio.Discute tu resultado.
+
+Modelo MSIR
+```{r}
+SEITr <- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      dS<- nu*(S*E*I*Tr) - beta1*((S*I)/(S+E+I+Tr))- mu*S
+
+
+      dE<- beta1*((S*I)/(S+E+I+Tr)) + I*p*r2 + beta2*((Tr*I)/(S+E+I+Tr)) - k*E - r1*E - mu*E
+
+
+      dI<- k*E - (r2 + mu)*I
+
+
+      dTr<- q*r2*I + r1*E -  beta2*((Tr*I)/(S+E+I+Tr)) - mu*Tr
+
+
+       list(c(dS, dE, dI, dTr))
+
+
+     })
+
+
+}
+```
+
+por paz mental solo agregare valores que creo pueden ser aplicables. nu y mu no lo muevo, beta1 lo pondre 1/90 suponiendo que al menos 1 vez cada 3 meses hay relaciones sexuales con una persona, beta 2 1/700 que casi cada 2 años alguien deje su tratamiento, k 1/1000 cada 3 años alguien pasa a ser infeccioso, r1 1/500  al rededor de año y medio la gente se hace una prueba y si sale positivo comienza un tratamiento, r2 1/360 al menos se vuelve a expuesto o a tratamiento, p = 1 porque es menos probable que por buenos habitos u otro deje de , ser infeccioso, por lo tanto, q=9.
+```{r}
+pars8 <- c(nu=.2, mu=.2, beta1=1/90, r2=1/360, p=.1, q=.59, beta2=1/700, k=1/1000, r1=1/500) 
+
+
+condiciones_iniciales8 <- c(S=10000000, E=2000000, I=2000000, Tr=3000000)
+
+
+tiempo8 <- seq(0, 12, by = 0.001)
+
+
+out8 <- ode(condiciones_iniciales8, tiempo8, SEITr, pars8)
+
+
+matplot(out8[ , 1], out8[ , 2:4], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "SEITr", lwd = 2)
+
+
+legend("topright", c("Susceptible", "Expuesto", "Infectado", "Tratamiento"), col = 1:3,lty=1:3,cex=0.5)
+```
+Por alguna razon me sale en blanco, no tengo idea de por que.
+
+# Modelo epidemiológico de la CDMX
+
+Considera el modelo que usó la CDMX para  moniterear al inicio de la pandemia de COVID-19 los casos, los hospitalizados y muertes en dicha entidad. El modelo se encuentra [acá](https://modelo.covid19.cdmx.gob.mx/modelo-epidemico)
+
+
+1. Explica el significado de cada ecuación: es decir, explica el significado de cada término y cada parámetro.
+Términos
+S = Susceptibles
+E = Expuestos
+I = Infectados
+L = Contagiados sintomáticos leves
+G = Contagiados sintomáticos graves
+H = Hospitalizados
+ICU = Unidad de Terapia Intensiva
+R = Recuperados
+M = Muertos
+
+Parámetros
+Multiplicador por subreporte 2  
+Dinfect Tiempo que es infeccioso el paciente  Valor 2.9  
+Dincub Tiempo de incubación (días) Valor 5.2
+p grave Tasa de hospitalización Valor 13.80% 
+DRL Tiempo de recuperación de casos leves (días)  Valor 14
+D hosp Tiempo entre presencia de síntomas y hospitalización en casos graves (días) Valor 4  
+p ICU Tasa de unidad de terapia intensiva (UCI) 5%
+D RH Tiempo entre hospitalización de casos graves no UCI y recuperación (días) Valor 12  
+p M Tasa de letalidad respecto a población general Valor 3%
+DICU Tiempo entre hospitalización de casos graves e ingreso a UCI (días) Valor 1  DRICU Tiempo entre ingreso a UCI y recuperación (días) Valor 7
+DM Tiempo entre ingreso a UCI y deceso (días) Valor 8
+N Población susceptible (millones) Valor 22  
+R0  Valor 2.83
+
+3. ¿La población se conserva?
+con base en las fórmulas es un sistema abierto, especialmente por el termino que esta en Suceptibles. El compartimento de muertes no se contabiliza como algo que sale, ya que está dentro del mismo sistema. Si no estuviera el compartimento de muertes, la población no tendria el crecimiento exponencial de algunos compartimentos, porque esas bajas serían consideradas como tal.
+
+4. Encuentra, si existe, el punto de equilibrio *free-disease*  
+
+5. Usa los parámetros de parámetros que sugieren y resuelve numéricamente el sistema de ecuaciones diferenciales. Asegurate que tu solución alcance un punto de equilibrio.Discute tu resultado.
+```{r}
+Cov2<- function(t, state, parameters) {
+
+
+with(as.list(c(state, parameters)), {
+
+
+      dS<- (R0/Dinfect)*I*S
+
+      dE<- (R0/Dinfect)*I*S - (1/Dincub)*E
+
+      dI<- (1/Dincub)*E - (1/Dinfect)*I
+
+      dL<- (1-Pgrave)*(1/Dinfect)*I - (1/DRL)*L
+      
+      dG<- Pgrave*(1/Dinfect)*I - (1/Dhosp)*G
+      
+      dH<- (1/Dhosp)*G - (1 - PICU)*(1/DRH)*H- PICU*(1/DICU)*H
+      
+      dICU<- PICU*(1/DICU)*H - (1 - PM)*(1/DRICU)*ICU - PM*(1/DM)*ICU
+      
+      dR<- (1/DRL)*L + (1 - PICU)*(1/DRH)*H + (1 - PM)*(1/DRICU)*ICU
+      
+      dM<- PM*(1/DM)*ICU 
+        
+        
+ list(c(dS, dE, dI, dL, dG, dH, dICU, dR, dM))
+
+
+     })
+
+
+}
+```
+
+```{r}
+pars9 <- c(R0=.0283, Dinfect=1/2.9, Dincub= 1/5.2, Pgrave=.138, DRL=1/14, Dhosp=1/4, PICU=.05, DICU=1/21, PM=.03 , DRICU=177 , DM=1/8 , DRH=1/12) 
+
+
+condiciones_iniciales9 <- c(S=15000000, E=1000000, I=1000000, L=1000000 , G=1000000 , H=1000000 , ICU=1000000 , R=1000000 , M=1000000 )
+
+
+tiempo9 <- seq(0, 20, by = 0.001)
+
+
+out9 <- ode(condiciones_iniciales9, tiempo9, Cov2, pars9)
+
+
+
+matplot(out9[ , 1], out9[ , 1:10], type = "l", xlab = "tiempo", ylab = "Población",
+
+
+main = "Cov2", lwd = 2)
+
+
+legend("topright", c("Susceptible", "Expuesto", "Infectados", "Sintoma Leve", "Sintoma grave", "Hospital", "Terapia intensiva", "Recuperados", "Muertos"), col = 1:3,lty=1:3,cex=0.5)
+```
+Parece que varios tienden a un crecimiento exponencial, no soy capaz de distinguir, pero me atreveria a decir que uno de los compártimetos es el de muertes. No me ha agradado.
+
+6. ¿Qué modificaciones se te ocurren que podrían implementarse para mejorar ese modelo?
+Justo como se comentan en la pagina, un modelo en donde se considere las tasas de contacto, contagio y sintomatología entre compartimentos con respecto a las edades, de igual manera los asintomáticos, los vacunados e incluso podría ser distintos compartimento a partir de la vacuna que se implemente y el número de dosi, con su correspondiente eficacia y periodo de inmunidad. Por otro lado, también se podría agregar al patógeno, su ciclo de vida e interacción intra e inter-especie, de igual forma el compartimento de los asintomaticos.

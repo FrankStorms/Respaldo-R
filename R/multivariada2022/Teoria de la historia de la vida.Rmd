@@ -1,0 +1,410 @@
+---
+title: "Teoria de la historia de la vida"
+author: "Francisco Alfonso Perez Storms"
+date: "26/1/2022"
+output: html_document
+---
+
+
+RED DE INTERACCIÓN 
+
+Cargar librerias
+```{r}
+library(knitr)
+library(readr)
+library(igraph)
+library(Hmisc)
+library(pheatmap)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Descargar la base de datos
+```{r}
+canidos_all <- read_csv("C:/Users/gbsto/Downloads/Base datos canidos.csv")
+```
+
+```{r}
+View(canidos_all)
+```
+
+Eliminamos los renglones que no nos son de utilidad porque solo hay NA 
+```{r}
+mammalia <- canidos_all[c(1:34),]
+```
+
+```{r}
+View(mammalia)
+```
+
+Nos quedamos unicamente con el identificador de especie
+```{r}
+mammalia_spp <- mammalia[c(-1, -2, -3, -4,-6, -7)]
+View (mammalia_spp)
+```
+
+Cantidad de especies
+```{r}
+length(mammalia_spp$species)
+```
+
+
+Revisamos la cantidad de NaÂ´s por variable
+```{r}
+sapply ( mammalia_spp, function(x) sum(is.na(x)))
+```
+
+hacemos que se forme la base de datos en formato de data.frame, revisamos la clase del objeto y abrimos el mismo.
+```{r}
+mammalia_spp <- as.data.frame(mammalia_spp)
+class(mammalia_spp)
+#View(mammalia_spp)
+```
+
+obtener algunos datos basicos de la base de datos de los estudiantes que toman matematicas
+```{r}
+print("Que tipo de base de datos es")
+class(mammalia_spp)
+print("Que longitud tiene")
+length(mammalia_spp)
+print("Estructura de la base de datos")
+str(mammalia_spp)
+print("Nombres")
+names(mammalia_spp)
+print("Dimensiones")
+dim(mammalia_spp)
+```
+
+female_maturity_d
+```{r}
+pro_spp <- factor( mammalia_spp$female_maturity_d)
+table(pro_spp)
+class(pro_spp)
+pro_spp_tb <- table(pro_spp)
+
+Fre_abs_ <- barplot(pro_spp_tb, col = rainbow(6), ylim = c(0,4),  main = "female_maturity_d", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_ <- barplot(prop.table(pro_spp_tb)*100, col = rainbow(6), ylim = c(0,20),  main = "female_maturity_d", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+litter_or_clutch_size_n
+```{r}
+pro_spp1 <- factor( mammalia_spp$litter_or_clutch_size_n)
+table(pro_spp1)
+class(pro_spp1)
+pro_spp_tb1 <- table(pro_spp1)
+
+Fre_abs_1 <- barplot(pro_spp_tb1, col = rainbow(6), ylim = c(0,5),  main = "litter_or_clutch_size_n", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_1 <- barplot(prop.table(pro_spp_tb1)*100, col = rainbow(6), ylim = c(0,20),  main = "litter_or_clutch_size_n", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+
+litters_or_clutches_per_y
+```{r}
+pro_spp2 <- factor( mammalia_spp$litters_or_clutches_per_y)
+table(pro_spp2)
+class(pro_spp2)
+pro_spp_tb2 <- table(pro_spp2)
+
+Fre_abs_2 <- barplot(pro_spp_tb2, col = rainbow(6), ylim = c(0,15),  main = "litters_or_clutches_per_y", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_2 <- barplot(prop.table(pro_spp_tb2)*100, col = rainbow(6), ylim = c(0,60),  main = "litters_or_clutches_per_y", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+
+
+masa_adulto
+```{r}
+pro_spp3 <- factor( mammalia_spp$masa_adulto)
+table(pro_spp3)
+class(pro_spp3)
+pro_spp_tb3 <- table(pro_spp3)
+
+Fre_abs_3 <- barplot(pro_spp_tb3, col = rainbow(6), ylim = c(0,4),  main = "masa_adulto", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_3 <- barplot(prop.table(pro_spp_tb3)*100, col = rainbow(6), ylim = c(0,15),  main = "masa_adulto", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+maximum_longevity_y
+```{r}
+pro_spp4 <- factor( mammalia_spp$maximum_longevity_y)
+table(pro_spp4)
+class(pro_spp4)
+pro_spp_tb4 <- table(pro_spp4)
+
+Fre_abs_4 <- barplot(pro_spp_tb4, col = rainbow(6), ylim = c(0,4),  main = "maximum_longevity_y", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_4 <- barplot(prop.table(pro_spp_tb4)*100, col = rainbow(6), ylim = c(0,10),  main = "maximum_longevity_y", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+dias_gest
+```{r}
+pro_spp5 <- factor( mammalia_spp$dias_gest)
+table(pro_spp5)
+class(pro_spp5)
+pro_spp_tb5 <- table(pro_spp5)
+
+Fre_abs_5 <- barplot(pro_spp_tb5, col = rainbow(6), ylim = c(0,4),  main = "dias_gest", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_5 <- barplot(prop.table(pro_spp_tb5)*100, col = rainbow(6), ylim = c(0,10),  main = "dias_gest", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+weaning_d
+```{r}
+pro_spp6 <- factor( mammalia_spp$weaning_d)
+table(pro_spp6)
+class(pro_spp6)
+pro_spp_tb6 <- table(pro_spp6)
+
+Fre_abs_6 <- barplot(pro_spp_tb6, col = rainbow(6), ylim = c(0,4),  main = "weaning_d", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_6 <- barplot(prop.table(pro_spp_tb6)*100, col = rainbow(6), ylim = c(0,10),  main = "weaning_d", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+birth_or_hatching_weight_g
+```{r}
+pro_spp7 <- factor( mammalia_spp$birth_or_hatching_weight_g)
+table(pro_spp7)
+class(pro_spp7)
+pro_spp_tb7 <- table(pro_spp7)
+
+Fre_abs_7 <- barplot(pro_spp_tb7, col = rainbow(6), ylim = c(0,4),  main = "birth_or_hatching_weight_g", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_7 <- barplot(prop.table(pro_spp_tb7)*100, col = rainbow(6), ylim = c(0,10),  main = "birth_or_hatching_weight_g", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+weaning_weight_g
+```{r}
+pro_spp8 <- factor( mammalia_spp$weaning_weight_g)
+table(pro_spp8)
+class(pro_spp8)
+pro_spp_tb8 <- table(pro_spp8)
+
+Fre_abs_8 <- barplot(pro_spp_tb8, col = rainbow(6), ylim = c(0,4),  main = "weaning_weight_g", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_8 <- barplot(prop.table(pro_spp_tb8)*100, col = rainbow(6), ylim = c(0,40),  main = "weaning_weight_g", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+
+longevity_y
+```{r}
+pro_spp9 <- factor( mammalia_spp$longevity_y)
+table(pro_spp9)
+class(pro_spp9)
+pro_spp_tb9 <- table(pro_spp9)
+
+Fre_abs_9 <- barplot(pro_spp_tb9, col = rainbow(6), ylim = c(0,4),  main = "longevity_y", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_9 <- barplot(prop.table(pro_spp_tb9)*100, col = rainbow(6), ylim = c(0,10),  main = "longevity_y", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+
+male_maturity_d
+```{r}
+pro_spp10 <- factor( mammalia_spp$male_maturity_d)
+table(pro_spp10)
+class(pro_spp10)
+pro_spp_tb10 <- table(pro_spp10)
+
+Fre_abs_10 <- barplot(pro_spp_tb10, col = rainbow(6), ylim = c(0,10),  main = "male_maturity_d", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_10 <- barplot(prop.table(pro_spp_tb10)*100, col = rainbow(6), ylim = c(0,30),  main = "male_maturity_d", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+
+inter_litter_or_interbirth_interval_y
+```{r}
+pro_spp11 <- factor( mammalia_spp$inter_litter_or_interbirth_interval_y)
+table(pro_spp11)
+class(pro_spp11)
+pro_spp_tb11 <- table(pro_spp11)
+
+Fre_abs_11 <- barplot(pro_spp_tb11, col = rainbow(6), ylim = c(0,25),  main = "inter_litter_or_interbirth_interval_y", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_11 <- barplot(prop.table(pro_spp_tb11)*100, col = rainbow(6), ylim = c(0,80),  main = "inter_litter_or_interbirth_interval_y", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+
+female_body_mass_g
+```{r}
+pro_spp12 <- factor( mammalia_spp$female_body_mass_g)
+table(pro_spp12)
+class(pro_spp12)
+pro_spp_tb12 <- table(pro_spp12)
+
+Fre_abs_12 <- barplot(pro_spp_tb12, col = rainbow(6), ylim = c(0,4),  main = "female_body_mass_g", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_12 <- barplot(prop.table(pro_spp_tb12)*100, col = rainbow(6), ylim = c(0,10),  main = "female_body_mass_g", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+male_body_mass_g
+```{r}
+pro_spp13 <- factor( mammalia_spp$male_body_mass_g)
+table(pro_spp13)
+class(pro_spp13)
+pro_spp_tb13 <- table(pro_spp13)
+
+Fre_abs_13 <- barplot(pro_spp_tb13, col = rainbow(6), ylim = c(0,4),  main = "male_body_mass_g", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_13 <- barplot(prop.table(pro_spp_tb13)*100, col = rainbow(6), ylim = c(0,15),  main = "male_body_mass_g", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+no_sex_body_mass_g
+```{r}
+pro_spp14 <- factor( mammalia_spp$no_sex_body_mass_g)
+table(pro_spp14)
+class(pro_spp14)
+pro_spp_tb14 <- table(pro_spp14)
+
+Fre_abs_14 <- barplot(pro_spp_tb14, col = rainbow(6), ylim = c(0,4),  main = "no_sex_body_mass_g", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_14 <- barplot(prop.table(pro_spp_tb14)*100, col = rainbow(6), ylim = c(0,20),  main = "no_sex_body_mass_g", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+adult_svl_cm
+```{r}
+pro_spp15 <- factor( mammalia_spp$adult_svl_cm)
+table(pro_spp15)
+class(pro_spp15)
+pro_spp_tb15 <- table(pro_spp15)
+
+Fre_abs_15 <- barplot(pro_spp_tb15, col = rainbow(6), ylim = c(0,3),  main = "adult_svl_cm", xlab = "Programa", ylab = "Frecuencia Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+text(Fre_abs_1, pro_spp_tb +0.1, labels = pro_spp_tb)
+
+Fre_rel_15 <- barplot(prop.table(pro_spp_tb15)*100, col = rainbow(6), ylim = c(0,8),  main = "adult_svl_cm", xlab = "Programa", ylab = "Porcentaje Species")
+grid(nx=NA, ny=NULL, lwd = 1, lty = 1, col = "gray")
+
+```
+
+No puedo eliminar las NA para hacer la red de interacción, a parte, creo que debo de simplifar en 0 y 1
+```{r}
+
+Ma_mammalia_spp <- as.matrix(mammalia_spp)
+row.names(Ma_mammalia_spp) <- Ma_mammalia_spp[,1]
+matriz <- Ma_mammalia_spp[ ,-1]
+
+class(matriz) <- "numeric"
+
+View (matriz)
+
+heatmap(matriz)
+
+tmatriz <-t(matriz)
+
+View(tmatriz)
+
+crr <- cor(tmatriz)
+View (crr)
+
+ctr <- cor(tmatriz)
+View (ctr)
+
+cobs <- cov (tmatriz, use = "na.or.complete")
+View (cobs)
+
+#red <- graph_from_adjacency_matrix(tmatriz, mode = 'directed')
+#plot(red)
+```
+
+```{r}
+library(corrgram)
+#corrgram(matriz, order=TRUE, lower.panel=panel.shade,
+#         upper.panel=panel.pie, text.panel=panel.txt, any(is.na(x)),
+#         main="mamalia")
+```
+
+
+```{r}
+library(ggplot2)
+library(GGally)
+# er <-as.matrix(mammalia_spp)
+#cor(matriz)
+# cor(mammalia_spp)
+#class()
+#ggpairs(mammalia_spp, columns = 2:16, title = "Mamiferos")
+```
+
+
+
+```{r}
+library(SciViews)
+#grafica 1 chafa
+View(matriz)
+pairs(matriz) #esta grafica salio bien 
+#Grafica 2 mas o menos
+#diagonal diferente
+pairs(matriz, diag.panel = "panel_boxplot", col="darkolivegreen3") #buscar el manual de SciView
+```
+
+
+```{r}
+library(TeachingDemos)
+library(aplpack)
+faces (matriz, face.type=2) ##son las caras, b1 a de ser la base de datos 
+```
+

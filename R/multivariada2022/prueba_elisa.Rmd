@@ -1,0 +1,73 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(readr)
+perros_elisa <- read_csv("Perros_Elisa - Hoja 1.csv")
+View(perros_elisa)
+```
+
+
+
+```{r}
+perros_elisa <- as.matrix(perros_elisa)
+perr_eli_t <- t(perros_elisa)
+print(perr_eli_t)
+```
+
+
+```{r}
+perros_elisa_a <-  perros_elisa[,-1]
+
+View (perros_elisa_a)
+View (perr_eli_t)
+
+perros_elisa_a <- as.matrix(perros_elisa_a)
+
+prom_perr1 <- c (median(perr_eli_t[2,]), median(perr_eli_t[3,]), median(perr_eli_t[4,]),median(perr_eli_t[5,]),median(perr_eli_t[6,]),median(perr_eli_t[7,]),median(perr_eli_t[8,]),median(perr_eli_t[9,]),median(perr_eli_t[10,]), median(perr_eli_t[11,]), median(perr_eli_t[12,]), median(perr_eli_t[13,]), median(perr_eli_t[14,]), median(perr_eli_t[15,]), median(perr_eli_t[16,]),median(perr_eli_t[17,]), median(perr_eli_t[18,]), median(perr_eli_t[19,]))
+
+prom_perr <- prom_perr1
+names(prom_perr) <- (c("p1_parvo","p2_parvo","p3_parvo","p4_parvo","p1_dist","p2_dist","p3_dist","p4_dist","p1_rabia","p2_rabia","p3_rabia","p4_rabia","p1_adtv","p2_adtv","p3_adtv","p4_adtv","ctrl1","ctrl2"))
+
+View(prom_perr)
+
+prom_perr <- as.matrix(prom_perr)
+
+hist(as.numeric(prom_perr))
+
+hist(as.numeric (perr_eli_t[,-1]))
+hist(as.numeric (perros_elisa_a))
+
+```
+
+```{r}
+# Load ggplot2
+library(ggplot2)
+
+# create dummy data
+data <- data.frame(
+  muestras = c("p1_parvo","p2_parvo","p3_parvo","p4_parvo","p1_dist","p2_dist","p3_dist","p4_dist","p1_rabia","p2_rabia","p3_rabia","p4_rabia","p1_adtv","p2_adtv","p3_adtv","p4_adtv","ctrl1","ctrl2"),
+  value= prom_perr1,
+  sd= c (sd(perr_eli_t[2,]), sd(perr_eli_t[3,]), sd(perr_eli_t[4,]), sd(perr_eli_t[5,]), sd(perr_eli_t[6,]), sd(perr_eli_t[7,]), sd(perr_eli_t[8,]), sd(perr_eli_t[9,]), sd(perr_eli_t[10,]), sd(perr_eli_t[11,]), sd(perr_eli_t[12,]), sd(perr_eli_t[13,]), sd(perr_eli_t[14,]), sd(perr_eli_t[15,]), sd (perr_eli_t[16,]), sd(perr_eli_t[17,]), sd(perr_eli_t[18,]), sd(perr_eli_t[19,]))
+)
+
+sdd <- c (sd(perr_eli_t[2,]), sd(perr_eli_t[3,]), sd(perr_eli_t[4,]),sd(perr_eli_t[5,]),sd(perr_eli_t[6,]),sd(perr_eli_t[7,]),sd(perr_eli_t[8,]),sd(perr_eli_t[9,]),sd(perr_eli_t[10,]), sd(perr_eli_t[11,]), sd(perr_eli_t[12,]), sd(perr_eli_t[13,]), sd(perr_eli_t[14,]), sd(perr_eli_t[15,]), sd (perr_eli_t[16,]),sd(perr_eli_t[17,]), sd(perr_eli_t[18,]), sd(perr_eli_t[19,]))
+
+sdd
+perr_eli_t[2,]
+sd(perr_eli_t[2,])
+# Most basic error bar
+ggplot(data) +
+    geom_bar( aes(x=muestras, y=value), stat="identity", fill="skyblue", alpha=0.7) 
+
+prom_perr <- as.data.frame(prom_perr)
+
+ggplot(prom_perr) +
+    geom_bar( aes(x=names, y=prom_perr), stat="identity", fill="skyblue", alpha=0.7)
+
+```
+
+

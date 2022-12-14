@@ -1,0 +1,80 @@
+---
+title: "Matrices"
+author: "Francisco Alfonso Perez Storms"
+date: "3/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Descargar base de datos
+```{r}
+medidas_micro <- read.csv("C:/Users/gbsto/Downloads/Telegram Desktop/datos_multivariada - Hoja 1 (1).csv", dec=",")
+View(medidas_micro)
+
+#Solo usar las columnas con valores
+medidas_micro1 <- medidas_micro[,3:16]
+```
+
+
+```{r}
+print("Correlación")
+cor(medidas_micro1)
+print("Varianza-Covarianza")
+cov(medidas_micro1)
+print("Distancias")
+dist(medidas_micro1)
+print("Doistancias Euclideana")
+dist(medidas_micro1, method = "euclidean")
+```
+
+
+Elipses y distribucion de puntos 
+```{r}
+library(corrgram)
+print("Correlación")
+corrgram(medidas_micro1, order=T, lower.panel = panel.ellipse, #panel inferior
+         upper.panel = panel.pts, # panel superior caracteristica y poner los nombres de las columnas en medio
+         text.panel = panel.txt, diag.panel = panel.minmax, main= "URUR") #Titulo
+
+```
+
+
+
+```{r}
+library(ggplot2)
+library(GGally)
+print("Correlación")
+ggpairs(medidas_micro, columns = 3:16, ggplot2::aes(medidas_micro = sexo))
+
+```
+
+
+
+```{r}
+
+library(permute)
+library(lattice)
+library(vegan)
+
+print("Distancia")
+vegdist (medidas_micro1)
+
+print("Distancia euclideana")
+vegdist(medidas_micro1, method = "euclidean")
+
+print("Distancia AltGower")
+vegdist(medidas_micro1, method = "altGower")
+
+print("Morisita")
+vegdist(medidas_micro1, method = "morisita")
+
+print("bray")
+vegdist(medidas_micro1, method = "bray")
+
+
+```
+
+

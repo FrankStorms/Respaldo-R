@@ -1,0 +1,284 @@
+---
+title: "multi parcial 1"
+author: "Francisco Alfonso Perez Storms"
+date: "20/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Multivariada
+
+Citas
+
+```{r}
+citation ()
+citation (package = "")
+```
+
+
+Ayuda
+
+```{r}
+?aov
+help(lm)
+help.search("aov")
+find("iris")
+example(lm)
+```
+
+Instalar y cargar librerías
+```{r}
+install.packages("")
+library()
+```
+
+Objetos
+```{r}
+saludo <- "hola"
+saludo
+```
+
+Vectores
+```{r}
+colores <- c("rojo", "verde", "azul")
+numeros <- (1:10)
+lenght (colores)
+class(colores)
+# coercion
+coercing
+colores <- as.factor (colores)
+numeros <- as.factor(numeros)
+as.character()
+as.numeric()
+as.matrix()
+```
+
+Dataframes
+```{r}
+names (iris)
+dim (iris)
+summary(iris)
+iris #precargada
+
+```
+
+### Primer tarea de prueba
+Histogramas utilizando hist()
+a) Con color
+b) Separado por dieta
+c) Con un color diferente para cada dieta
+```{r}
+View (ChickWeight)
+
+hist(ChickWeight$weight, col = ChickWeight$Diet, border = "pink")
+
+hist(ChickWeight$weight, col = "red")
+hist(weight~Diet, ChickWeight)
+hist(weight~Diet, ChickWeight, col=c("red","orange"))
+
+
+
+```
+
+Histograma con ggplot
+a) con color
+b)color para la linea y otro color para el relleno
+c)con un color diferente para cada dieta (colores default)
+d)con un color diferente para cada dieta (colores especificos)
+```{r}
+library(ggplot2)
+
+ggplot(ChickWeight, ges (y = weight) +
+         geom_histogram(col ="blue" , fill ="green")+
+         ylab()+
+         xlab()+
+         ylim())
+
+ggplot(ChickWeight, ges (y = weight(), fill = Diet)+
+         geom_histogram()
+       
+ggplot(ChickWeight, ges (y = weight(), fill = Diet)+
+         geom_histogram() +
+         scale_fill_manual(c("red","blue", "green","orange"))
+
+qplot(ChickWeight$weight,
+      geom = "histogram",
+      fill="blue",
+      col="red")
+
+ggplot(ChickWeight, aes(x=weight, fill = Diet)) +
+  geom_histogram(binwidth = .5, alpha = .5, position = "identity")
+
+ggplot(ChickWeight, aes(x=weight, fill = Diet)) +
+  geom_histogram(binwidth = .5, position = "dodge")
+
+#Desnsity plots
+
+ggplot(ChickWeight, aes(x=weight, colour = Diet)) + geom_density(alpha = .3)
+
+
+```
+
+Boxplot default
+a) con color
+b)separado por dieta
+c)con un color diferente para cada dieta
+```{r}
+boxplot(weight ~ Diet, data=ChickWeight, col= c("blue","pink","red","green"))
+```
+
+Boxplot con ggplot
+a)separado por dieta y con color
+b)con un color diferente para cada dieta
+c)
+```{r}
+ggplot(ChickWeight, aes(x=Diet, y=weight, color=Diet))+
+  geom_boxplot()
+
+ChickWeight$Diet <- as.numeric(ChickWeight$Diet)
+dos<-hist(weight~) #NO FUNCIONA
+hist(ChickWeight$weight, col = c("red","green","orange","pink"))
+hist(ChickWeight$weight, col = ChickWeight$Diet, border = "pink")
+
+```
+
+
+Manejando base de datos: data cells
+
+```{r}
+subset()
+which[]
+[renglon, columna]
+
+subset (cell, smoker == "TRUE" & age == "young" & weight == "obese")
+```
+
+
+```{r}
+library(dplyr)
+class(ChickWeight$weight)
+
+hist(ChickWeight$weight, col = "powderblue", xlab = "El peso de los pollos", ylab = "La frecuencia", main = "El histograma")
+
+hist(x = ChickWeight$weight[ChickWeight$Diet == 1], main = "Dieta de los pollos", xlab= "El peso de los pollos", ylab = "La frecuencia", col = "powderblue")
+
+hist(x= ChickWeight$weight[ChickWeight$Diet==2], add = TRUE, col = "salmon", density = 70)
+hist(x= ChickWeight$weight[ChickWeight$Diet==3], add = TRUE, col = "goldenmon", density = 70)
+hist(x= ChickWeight$weight[ChickWeight$Diet==4], add = TRUE, col = "darkseagreen1", density = 70)
+
+```
+
+
+###Matrices
+
+r-graph-gallery.com/index.html
+statmethods.net/stats/correlations.html
+
+mtcars
+iris
+nuestras mediciones
+```{r}
+library(GGally)
+ggpairs(flea, columns = 2;4, ggplot2::aes(colous=species)) #Acomodame todas estas cosas que estas calculando de esta forma
+
+na.omit() #para que quite los renglones que no quiero que pele o tome en cuenta. 
+#NAN not a number distinto a una NA.
+```
+
+
+```{r}
+r_iris <- cor(iris)
+r_iris
+
+co_iris <- cov(iris)
+co_iris
+```
+
+
+##Crear matrices
+
+Hay 2 formas de crear una matriz en R
+A) dividiendo en un vector
+Se crea un vector grandote y ya despues lo vamos dividiendo en terminos de renglones o de columnas
+```{r}
+minivector <- c(1:10)
+matriz0 <- matrix(minivector, nrow = 2) #ncol
+
+```
+
+Combinando 2 vectores
+```{r}
+
+```
+
+
+identificar elementos de la matriz
+```{r}
+matriz0 [3,2]
+matriz0 [4,]
+matriz0 [,3]
+```
+
+
+b) Combinando vectores; misma longitud y clase
+```{r}
+colores <- c(2,2,3,2,8) #vector numérico que tiene 5 elementos
+formas <- c(3,4,1,2,3)
+
+matriz_columnas <- cbind(colores, formas)
+matriz_columnas <- rbind(colores, formas)
+
+```
+
+nombrar renglones y columnas
+```{r}
+rownames (matriz_columnas) <- c("uno","dos")
+rownames(matriz_columnas) <- c("EG1","EG2","EG3","EG4","EG5")
+
+colnames(matriz_columnas)
+rownames(matriz_columnas)
+
+```
+
+operaciones de matrices
+```{r}
+primera <- c (3,7,1,2,5,0,4,0,8)
+matriz_A <- matrix (primera, nrow = 3)
+
+segunda <- c(6,2,3,1,8,4,0,7,5)
+matriz_B <- matrix(segunda, nrow = 3)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

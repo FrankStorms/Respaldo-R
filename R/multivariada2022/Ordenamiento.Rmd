@@ -1,0 +1,364 @@
+---
+title: "Analisis de ordenamiento"
+author: "Francisco Alfonso Perez Storms"
+date: "14/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1.- Analisis de componentes principales
+
+ejemplo con pgfull.txt (en el drive), hay 54 variables (abundancia de especies,, 2 factores (plot, line) (SON DISCRETOS), 3 covariables (species richness, hay biomass, soil pH)
+
+```{r}
+pgfull <- read.delim("~/multivariada2022/pgfull.txt")
+View(pgfull)
+```
+
+
+```{r}
+class (pgfull)
+```
+
+Para un PCA se utiliza el modo R (Relacionmes entre variables = 54 variables) == utilizar matrices de varianza-covarianza o matrices de correlación
+quedarnos solo con las variables continuas (variables de respuesta)
+
+```{r}
+nuevo <- pgfull [,1:54] #data.frame con solo variables continuas 
+nuevo
+```
+
+Hay dos funciones: prcomp (matrices singulares) y princomp (utiliza la funcion eigen)
+
+#Ezel revisa la base de datos y nos comenta que ya por experiencia cuando una variable tiene valores chiquitos o tienen muchos ceros, pero hay otras variables son muy abundantes y son muy altas las proporciones, en general si se ve de esa manera los datos y no estan en la misma escala es muy recomendable hacer el scale. = T, si todos por ejemplo estuvieran con .0 etc, se podria hacer el analisis sin el scale = T, pero eso debende de que alguien vea los datos. En clase lo hace sin scale para ver como sale. 
+```{r}
+fit <- prcomp (nuevo, center = T, scale = T)
+fit #visualizamos y conocemos el peso de los eigenvectores para cada una de las cordenadas prinicpales 
+summary(fit) #Con cuantos componentes principales me quedo = screetplot. # Los dos primeros explican el 64% de la variación total. 
+screeplot(fit) # Cuando uno se para puede ver el acantilado, pero luego se hace chiquito y asi se visualiza, Hay gente que diria, bueno mira claro que a partir del 7 ya no se ve nada, pero los 6 primeros te dicen un monton, por eso nos deberiamos quedar con los 6 primeros (muy puristas en estadistica), pero en realidad, quedarse con 6 es muy complicado, y en este se puede ver muy bien que en los 2 primeros se ve cuanto explican y es el 64% y se ve miuy bien el acantilado y eso seria suficiente para reducir a 2 dimensiones.
+```
+
+Podemos hacer un correlograma, partimos de un esenario donde mis variables son ortogonales, cuando el PCA se hace se siguen teniendo  las variables de respiuesta pero ahora cada una es una combinación lineal y ahora son ortogonales entre si, entonces lo que explica cada uno es una combinación de todas las variables y es diferente entre ellos, por eso al final suma 1. Si uno se quedaa con las primeras 6,y se hace una reducción de dimensiones, uno no ganara nada, porque a parte cuando se hacen los score, nos dira que el PC1 equivaldra al 1 al 2 y hasta el 6 y eso que es? Pues quien sabe, entonces no hace sentido porque no se puede interpretar biologicamente. 
+
+```{r}
+library(factoextra)
+# Puede graficar varias tipos de graficas, hay muchas opciones en general es para analisis de ordenamiento, pero todo es para mejorar la visualización.
+gr_pg_pca <- fviz_pca_biplot(fit, geom = "point", habillage = pgfull$lime, addEllipses = T, col.var = "black")
+gr_pg_pca
+
+#Lo interesante es que tenemos variables continuas como el Ph y entonces podriamos hacer una regresión lineal entre el primer componente principal y el pH, y ver si hay una relación con eso y la concentración de biomasa de heno. Lo que se ve en l.a grafica es que parece no haber diferencia entre los niveles de lime. Si queremos hacer un analisis para ponerlo a prueba, deberia salir no significativo, pero ahi se termina el PCA. 
+#
+#Ahora nos podemos quedar con el PC1 y hacer un analisis de regresión con pH.
+fit$x
+respuesta_a2 <- fit$x [,1]
+
+analisis1 <- lm(respuesta_a2 ~ pgfull$pH, data = pgfull)
+summary(analisis1)
+
+#Ya cuando arroja el resultado, recordemos que primero se observa si los residuales se ajustan a una distribución gausiana o no, obtemos luego el intercepto y  luego ya el efecto del pH, sobre el componente principal 1, y uno puede hacer la grafica. SE puede observar que hay un efecto del pH que es significativo en Pr y tiene un signo negativo en el estimado y eso implica que la linea de regresión va hacia abajo, y se ve cuanto explica en el ajusted R-squared que es muy poquito, pero eso ya es otra cosa. Pero este es otro analisis que se puede hacer, quedarse con el primer componente principal y hacer ya no una anova o una T, si no hacer un analisis de regresión, ver la correlación de eso con otra cosa y cosas asi, y aplicar estadistica univariada practicamente. 
+
+
+#La otra opción para graficar es hacerlo como se hizo para el analisis de discriminantes, uno puede escribir sus funciones para hacer algo que nos guste, pero como la gente lo usa aunque no sabe el porque, hay un paquete de funciones para visualizar el resultado del PCA. 
+
+#Fa hizo un codigo para ver algo similar al screetplot, pero con respecto a los pesos de las variables en cada componente principal, ya de ñoño uno puede ver el codifo fuente del screetplot para ver como esta construida esa función y compararla con la que hizo, y asi uno aprende a programar. NO LO VISUALIZO ADECUADAMENTE, QUIZAS DEBERIA PEDIRSELO A FA. 
+
+plot(pgfull$pH, respuesta_a2) #La respuesta es el componente principal y queremos ver como el pH afecta al componente principal 1, que es una combinación lineal del todas mis variables originales. 
+
+
+
+```
+
+¿Con cuantas dimensiones me quedo?
+
+```{r}
+plot(fit) #screen plot = con cuantos componentes me quedo??... acantilado¡
+```
+
+Hacer estadistica univariada considerando que el PC1 es mi nueva variable de respuesta (combina todas las originales)
+, ver el efecto de los factores (poner a prueba las hipotesis) sobre los componentes principales...
+
+```{r}
+componente1 <- predict (fit) [,1] # Seria mi nueva variable de respuesta = Y (Combinación las 54 variables originales)
+componente2 <- predict(fit)[,2]
+fit1 <- lm(componente1 ~ hay, data = pgfull)
+summary.lm(fit1)
+plot (pgfull$hay, componente1, pch = 12, xlab = "Biomasa", ylab= "Componente 1", col = "orange")
+fit2 <- lm (componente2 ~ pH, data = pgfull)
+summary.lm(fit2)
+plot(pgfull$pH, componente2, pch=16, xlab = "pH del suelo", ylab = "Componente2", col = "purple")
+
+```
+
+Ejemplo con iris
+
+```{r}
+class(iris)
+head(iris)
+iris1 <- iris [,1:4]
+iris1 <- as.matrix(iris1)
+fit2 <- prcomp (iris1)
+fit2
+summary (fit2)
+screeplot(fit2) #Grafica de acantilado
+biplot(fit2)
+```
+
+Ejemplo con la base de datos mediciones 
+
+Se puede hacer con 2 funciones
+prcomp te ayuda a resolver la matriz, el sistema de ecuaciones, a veces hay matrices que son singulares, y eso es más problema resolver la matrices. Esta si te permite resolver sistemas singulares, y como no sabemos si se comportaran como una matriz singular o no, se usa este.  MAS ROBUSTA
+princomp, igual te saca un analisis de componentes principales si la matriz no es singular, pero este utiliza para resolver el sistema usa la función eigenvalor, entonces si no se puede sale un error
+
+EL PCA SIEMPRE se hace a partir de matrices de correlación o de varianza-covarianza SIEMPRE. Por lo tanto es más facil cuando son variables continuas, esas variables de respuestas. Estrictamente uno puede sacar una correlación entre una variable discreta y una continua, pero obtenemos una cosa rara, NO SE RECOMIENDA. 
+x debe ser unq matriz o un data frame, esta el centroide y el que si queremos que se escale, y deben estar en True recomendación, 
+```{r}
+#1.- solo variables continuas
+datos2 <- datos_multivariada [, 3:16]
+#2.- Usar la función prcomp
+fit <- prcomp(datos2, center = T, scale. = T) #Con scale. lo que hace es que cuando esta calculando el primer componente principal lo escala a 1 y a partir de eso escala el resto. Dependiendo del tipo de variables que uno tenga a veces conviene escalarlo y a veces no, pero si por ejemplo si uno lo hace con scale cambia la varianza en el screeplot, pero igual cambia la grafica. entonces es más facil ver la grafica y a partir de ella tomar la decisión, lo que seguro son los valores es cuando imprime y le arroja la proporción de varianza que explica cada componente principal, y en la grafica es más "relativo", de si es mucho o poquito, y es relativo de si esta arriba de uno o tal y hay pierde y por eso puede ser un problema. Vemos el screeplot porque cuando la gente habla de E. multivariada lo enseña y por eso lo vemos, pero no esta cool. CUando cambia la escala igual obvio cambia el resultado en summary. 
+
+#DE AQUI PODEMS PENSAR EN SI HACER UN PERMANOVA O UN ANALISIS DE SIMILITUD, O MEQUEDO CON EL PRIMER COMPONENTE PRINCIPAL Y HAGO UN ANALISIS UNIVARIADO. 
+
+#Pedimos un resumen del PCA
+#De esta manera sabemos la importancia de los compomnentes 
+summary(fit)
+#grafica sencilla
+ biplot(fit)
+ screeplot(fit) #Grafica de acantilado, Se ve como decae el porcentaje explicado por cada componente principal. Cada barrita representa el componente principal, y se pone que tanta varianza hay, uno quiere quedarse con todos aquellos componentes princiaples que esten por arriba del 1, porque al estar en terminos de varianza implica un desviación estandar, y eso se pasa a terminos de varianza, y uno quiere quedarse con tantos componentes principales que esten por arriba del valor de 1. Idealmente uno quiere que las dos primeeras esten altas, mas no a la misma altura, de ser asi implicaria que esta mla hecho el analisis, porque siempre por como se hacen los pCA, el primero explica más y el segundo esta igual algo esta mal, idealmente que la segunda sí este altita, y que de la segunda se viera un acantilado altisimo. Se comento de 1 hacia arriba sí nos quedamos con los 2 primeros para reducir las 14 dim a 2. y son combinaciones lineales de las variables originales, no se pierde ingo. 
+
+```
+
+
+Como es muy famoso el PCA, se han hecho paquetes especiales para graficarlos. 
+
+```{r}
+library(factoextra)
+# Puede graficar varias tipos de graficas, hay muchas opciones en general es para analisis de ordenamiento, pero todo es para mejorar la visualización.
+gr_iri_pca <- fviz_pca_biplot(fit2, geom = "point", habillage = iris$Species, addEllipses = T, col.var = "black")
+gr_iri_pca
+#El más grande de los puntos es el "centroide", de todos los puntos que representa
+#Se requiere hacer un analisis para corroborar que no es significativa la diferencia, esto no remplaza una prueba estadistica. Se pueden hacer analisis de similitud anosim y el otro es hacer un permanova, es una anova usando permutaciones. y eso te perimte tener como respuesta una matriz, puede ser una matriz de varianza-covarianza o de corelaciones para hacer un permanova o puede ser de distancia para hacer un analisis de simlitud y eso sí puede dar un valor de p, etc. Lo ideal es hacer un PCA, y eso acompañarlo con el analisis de la prueba estadistica, y muchos hacen la figura y y pone una nota el resultado del permanova o tal para tener en una misma grafica las dos cosas. Uno siempre le cree al resultado. Si es muy contrastante es mejor revisar si no hubo algun error.
+```
+
+como la primer variable me explica un monton, puedo extraer los Zscore de la primer variable y hacer analisis de univariada con esa variable. 
+Se puede utilizar el PC1 como variable de respuesta y poder correlación, regresión, aov, t-student
+```{r}
+fit2$rotation
+fit2$x #Ña PC1 es mi nueva Y (variable de respuesta), y se puede hacer un aov para ver diferencias entre las 3 especies.}
+
+#Para los 4 primeros eje tengo el valor que corresponde para el componente principal 1, y tengo 150 por las observaciones, esa es mi variable de respuesta, porque es el cokmponente principal 1 para mi base de datos completa para mis 150 observaciones, y esta seria mi primer columna, mi variable de respuesta. Como explica el 92% yo ya no quiero quedarme con 4 variables, si no con solo 1 dimensión, que es una combinación de las 4 originales, se reduce dimensiones, más no información. Con la información uno puede hacer un analisis. Con el PC1 se tiene la nueva y
+
+#1.- queremos tener separada nuestra variable Y (PC1)
+variable_respuesta <- fit2$x[,1]
+analisis_varianza <- aov( variable_respuesta ~ iris$Species, data = iris )
+# se hizo un analisis univariado, pero usando como Y el resultado de un PCA.
+summary(analisis_varianza)
+summary.aov(analisis_varianza)
+
+# Se hacen combinaciones de un monton de variables, pero quizas esas cosas no son tan importantes, primero se hace un A. de ordenamiento y reducir dimensiones, y si ocurre lo del primer eje sin importar el tipo de ordenamiento y explica más del 80% y el resto se ve muy chiquito y entonces me quedo con eso, hago estadistica univarida, porque aparte se sabe que ya se puede poner a prueba una hipotesis. Con el univariado se tiene la HO de que el promedio del PC1 para setosa es igual que el promedio de PC1 de versicolor que es igual al PC1 de virginica. Por otro lado estan las Ha que son varias opciones, que dos son iguales y uno diferente, varias opciones. 
+#Con el PC1 no se pone a prueba nada, pero con una variable, que es una combinación lineal de las variables originales, y ahora sí pongo a prueba una hipotesis con un analisis de varianza, porque un analisis univariado es un anova, donde ahora mi variable de respuesta es el primer componente principal y se puede ver si hay diferencia entre las especues. Y ahora se ve el resultado con el summary, y obtenemos la tabla que se conoce bien, tenemos el efecto de la especie sobre el componente principal 1, y hay 2 grados de libertad porque son 3 especies, la suma de cuadrados, los cuadrados medios, el valor de F y de P aproximado y que es más pequeño que el .05. entonces podemos concluir que hay diferencias entre las especies. por lo tanto se rechaza la hipotesis nula y se acepta la alternativa, más no sabemos cual de ellas, ENTONES HACEMOS EL TUKEY
+
+TukeyHSD(analisis_varianza)
+
+#Con este ya hicimos la prueba posthoc del analisis de varianza y me pone una especie vs otra para ver si es significativo. se ve algo raro en p, aunque "claramente" sí hay diferencia, porque en  las 3 la diferencia es grande, quizas en la de verginica y versicolor que es la diferencia más pequeña (diff), luego sale el lower y el uper, o sea el valor más bajo y el más alto, y parece que la diferencia entre esas la diferencia es muy chiquita y los que claroq ue son muy diferentes son las otras dos. Pero entre ambos obtemos el resultado de poner a prueba una hipotesis, cosa que NUNCA hicimos cuando hicimos el PCA. 
+```
+
+Si tuvieramos en la base de datos iris otra variable continua, podriamos hacer un analisis de regresión con el PC1 y esa otra variable continua, porque en realidad ya sabemos extraer las variables del primer componente principal, y esa nueva variable continua la podemos usar para cualquier analisi que uno quiera, dependiendo obivamente de la información que tengamos en la base de datos, no se pueden inventar cosas, como lo que teniamos era un factor discreto con 3 especies es que se realizo un anova, pero se podria hacer cualquier analisis que uno quiera. Casi lo que uno siempre hace es combinar estadistica univariada con multivariada. 
+
+
+### 2.- Analisis de Factores (FA)... inverso al PCA
+usando la función facanal, stats
+
+ejemplo con iris
+```{r}
+model1 <- factanal(iris1, factors = 1)
+model1 
+
+#Como maximo uno le debe poner la cantidad de factores correspondiente a su numero de variables continuas, 
+#Como para esta base de datos 2 es mucho, solo correra para 1 factor, el uniquenesses son las singularida para cada una de las 4 variables, el primer eje seria el factor1, y luego estan las 4 variables y ese seria el eigenvector para el factor 1, y se puede ver el peso o contribución para el factor 1, y luego te dice la suma de cuadrados y luego la proporción de varianza para cada factor, y con uno se explica el 72%, y asi uno le cree que solo necesita 1. Luego en la parte de abajo hay un estadistico que UNICAMENTE indica que un solo factor es suficiente. No se confunda con una preuba de hipotesis de analisis de factores.
+
+#El primer factor explica el 73% y de ese factor puedo hacer un analisis univariado, con una anova con las 3 especies. 
+```
+
+Usando la función "fa"
+```{r}
+library(ggplot2)
+library(psych)
+base1 <- cov(iris1)
+base1
+model2 <- fa(base1, nfactors = 1, fm = "wls", rotate = "oblimin") #Ejemplo con diferentes fm y factores. Algo salio mal o no sé, pero si corrio
+print(model2, sort = T)
+```
+
+Para la base de datos de mediciones
+```{r}
+model2_fa <- factanal(datos2, factors =2)
+model2_fa
+#Ya luego salen los loading y sale interesante, porque algunos estan en negro.
+
+
+```
+
+
+### 3.- Analisis de correspondecia
+```{r}
+library(ca)
+#Ejemplo utilizando dataframe "HairEyeColor", esta como tabla de contingencia
+#Se usa una base de datos donde viene el color de los ojos y el cabello, uno imprime el data frame y se tienen dos tablas uno para hombres y otro para mujeres, entonces hecha es una tabla de contingencia, lo que se tiene el la primer columna es el color de cabello y en la otra es el color de los ojos, de si es cafe, azul, miel, verde y se separan los conteos, hay hombres y mujeres. 6y asi uno puede identificar. 
+data ("HairEyeColor")
+#Si uno tuviera un cero en uno, implica que en la base de datos hay cero hombres con x caracteristica, entonces es poco probable que tiene esa caracteristica, pero implica que no se logro detectary hay que tener ese cuidado del cero.Uno ve el numeor de personas observadas de las dos variables, lo que uno quiere hacer en la comparación de analisi de correspondencia uno se queire quedar con los datos pero a la par se quieren combinar los datos para tener una mayor cantidad de individuos, porque recordemos que cuando los valoreson pequeños menos a 5, la X-square tiene problemas para funcionar, uno lo queq uiere es crear los datos que sea la suma de lo que uno encuentra, y como la data frame son datos, a aparotr de una tabla marginal, y se suma, entonces esa seria como nuestos datos observados, los conteos para que se haga el anaalisis de correspondencia. 
+View (HairEyeColor)
+class(data)
+#Ahora sí el analisis de correspondencia
+datos <- margin.table(HairEyeColor, 1:2) #Quiero juntar las dos tablitas para tener los datos 
+datos
+#Vamos a buscar la info para ver como funciona la función, de los argumentos. en los detalles vienen loss valores que nos regresa el analisis, las referencias y los ejemplos de los datos, scada los eigen valores del porcentaje, entonces seria como el primer eje princial 1-3, el porcentaje, y luego los rowns es la dista despues de los centroides, esta la inercia, la distancia, luego los valores para dimensión 1 o 2, el eje principal 1 y 2, y se ve que se separa por renglon y por columna. 
+model3 <- ca (datos)
+model3
+#De esta manera se puede graficar y salen ambas dimensiones. Del % de variación, que explica cada dimensión, la 1 es como el primer Zscore, y asi, con los dos primeros se explica suficiente. Igual se podria quedar con el de 89% para hacer analsiis de univariada, pero ahora no lo haremos porque ya lo hemos hecho, y queremos una grafica de las 3. En azul es el cabello, y el rojo los del ojo, entonces lo más cercanos son los que implican la dependencia hay una asociación muy fuerte entre los que tienen cabello negro y los ojos cafes, si uno quisiera saber que tanta correspondeica hay entre si tienen los ojos cafes o son rubios, los dos estan muy separados, se puede decir que casi que son independientes, no hay dependencia entre el color de los ojos y el cabello, de verde y wero.  
+
+plot (model3)
+#Los valores tiene que ver con la escala que tienen los zscore, y en donde se ubican, uno podria hacer la grafica si se guardan los puntos y se hace un grafica con la función Plot y se mueven los Xlin y el Ylin y se puede poner desde -,8 a .8 y asi, uno quiere ver si hay correspondeica entre ambas, lo qu euno ve es el color de cabello y de ojos, uno ve en la grafica de la clase, la correspomndencia entre los sitios y la presencia de las hormigas. Tiene que ver con correspondencia de una cosa con la otra. Esto es lo que uno espera dada la muestra. Para poder extrapolar, dependera mucho del tamaño de muestra, siempre entre más mejor. 
+
+```
+
+
+### 4 .- Analisis de coordenadas principales
+Se necesita una matriz de distancia
+funcion cmdscale, statsm es la
+```{r}
+
+
+# A) Base de datos...
+#agaves1 <- agaves [, 2:92] #le quita
+#agaves_continuo <- as.matrix(agaves)
+#agaves_discreto <- ifelse(agaves_)
+#agaves_discreto
+#agaves_continua
+
+# b) Hacer matriz de distancia
+#library(vegan) #Cargar libreria
+#agaves_jaccard <- vegdist (agaves_discreto)
+#agaves_manhatta <- vegdist (agaves_continuo)
+
+#C) Ahora si hacer un PCoA...
+#model4 <- cmdscale(agaves_jaccard)
+#modelo14 #cada columna es una coordenada
+#modelo5 <-  cmdscale(agaves_manhatta)
+#modelo5
+
+#d) Ahora la grafica
+#x <- model4 [,1]
+#y <- model4 [,2]
+
+#plot(x,y, xlab = "Coordenada 1",)
+##dd ) Ahora con colores : )... dpr
+#etiquetas_agaves <- agaves$id # de
+#colores_agaves <- function (variable)
+#{if (length(grep ("At", variable)))
+#{"purple"}
+#  else
+#  {"blue"}
+#  }
+#Colores_etiquetas_agaves <- unlist
+#plot(x,y,xlab = "Coordenada 1", )
+
+
+#########
+
+#Prueba para sacar los metadatos
+#especie <- function (variable)
+#{if (length(grep("At", variable)))
+#{"tequilana"}
+#  else
+#  {"salmiana"}
+  
+#  temporada <- function (variable)
+#  {if (length(grep("D", variable))) }
+#  }
+
+```
+
+Usando lo que se vio en clase, scrip
+```{r}
+# Colores
+colors <- c("dodgerblue3","hotpink3","green4")
+colors <- colors[as.numeric(iris$Species)]
+
+# Formas
+shapes = c(8, 17, 15) 
+shapes <- shapes[as.numeric(iris$Species)]
+
+# Distancia
+iris
+iris1 <- iris[,1:4]
+iris2 <- dist(iris1, method = "euclidean")
+modelo <- cmdscale (iris2, k=2)
+x1<- modelo [,1]
+y2 <- modelo [,2]
+
+# Plot
+plot(x = x1, y = y2, frame = FALSE,
+     xlab = "Cor1", ylab = "Cor2",
+     col = colors, pch = shapes)
+
+# Recuadro
+legend("topright", legend = levels(iris$Species),
+       col = c("dodgerblue3","hotpink3","green4"),
+       pch = c(8, 17, 15) )
+
+#usando ggplot2 #NO ME SALE
+#library(ggplot2)
+#plot_colores <- ggplot2 (modelo, aes(x = modelo [,1], y = modelo [,2]), shape =iris$Species, color = iris$Species +
+#                           geom_point() +
+#                           scale_shape_manual c(8,17,15) +
+#                           scale_color_manual c("dodgerblue3","hotpink3","green4"))
+
+```
+
+NMDS
+
+```{r}
+library(vegan)
+library(permute)
+library(lattice)
+
+NMDS_ana <- metaMDS(iris[,1:4], "canberra",2)
+summary(NMDS_ana)
+
+#1 er opcion
+scores(NMDS_ana)
+
+#usando nuevas funciones para el plot
+#Más sencilla 
+plot(NMDS_ana)
+
+#Algo salio mal
+# orditorp()
+
+# ordiellipse (NMDS_ana, group = iris$Species, col = c("green", "blue", "red"))
+
+```
+
+
+Combinando analisis de ordenamiento y clasificacion
+
+ordicluster
+
+Se agrupa no por el grupo definido de la variable ejemplo species; sino por el resultado de 1 analisis de cluster
+```{r}
+
+clus_2 <- hclust(dist(iris1))
+ordicluster(NMDS_ana, clus_2)
+
+ordiplot(NMDS_ana, type = "t", group = iris$Species)
+
+#variante
+
+ordiplot(NMDS_ana, type = "point", group = iris$Species)
+
+ordispider (NMDS_ana, group = iris$Species, col = c("purple", "yellow", "darkgreen"))
+```
