@@ -1,0 +1,112 @@
+---
+title: "Plasmido-Fago-Bacteria"
+author: "Pedro, Frank y Samuel"
+date: "2023-01-09"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(deSolve)
+```
+
+###PRIMER PRUEBA
+
+
+```{r}
+BacFa <- function(t, state, parameters) {
+with(as.list(c(state, parameters)), { 
+       dB1<- nu*B1 - beta*B1*F1 - mu*B1
+       dB2<- nu*B2 + beta*(1 - d)*B1*F1 - gama*B2*F2 - mu*B2
+       dB3<- nu*B3 + gama*(1 - e)*B2*F2 - epsilon*B3*F3 - mu*B3
+       dBn<- epsilon*B3*F3
+       dF1<- sigma*(1 - g)*B1*F1 - sigma*g*B1*F1
+       dF2<- delta*(1 - h)*B2*F2 - delta*h*B2*F2 + sigma*g*B1*F1
+       dF3<- lamda*(1 - l)*B3*F3 - lamda*l*B3*F3 + delta*h*B2*F2
+       dFn<- lamda*B3*F3
+        list(c(dB1, dB2, dB3, dBn, dF1, dF2, dF3, dFn))
+      })
+}
+```
+
+```{r}
+parsB <- c(nu=72/1, mu=72/1, beta= 72/5, gama = 72/5, epsilon= 72/5, sigma=72/5, delta= 72/5, lamda= 72/5, d=.05, e=.05, g=.05, h=.05, l=.05)  
+condiciones_inicialesB <- c(B1 =1000, B2=1000, B3=1000 , Bn=100, F1=50 , F2=50 , F3=50 , Fn=10 )
+tiempoB <- seq(0, 2, by = 0.001)
+outB <- ode(condiciones_inicialesB, tiempoB, BacFa, parsB) 
+matplot(outB[ , 1], outB[ , 2:4], type = "l", xlab = "tiempo", ylab = "Población",
+main = "BacFa", lwd = 2)
+legend("topright", c("B1", "B2", "B3","Bn","F1", "F2", "F3","Fn"), col = 1:3,lty=1:3,cex=0.5)
+```
+
+
+
+####SEGUNDA PRUEBA
+
+```{r}
+BacFaPla <- function(t, state, parameters) {
+with(as.list(c(state, parameters)), { 
+       dBsc <- beta*Bc1b + theta*Bc2b + rho*Bc3b - epsilon*Bsc*Bc1b - gama*Bsc*Bc2b - kappa*Bsc*Bc3b
+       dBc1a<- epsilon*Bsc*Bc1b - alfa*Bc1a
+       dBc1b<- alfa*Bc1a - beta*Bc1b
+       dBc2a<- gama*Bsc*Bc2b - delta*Bc2a
+       dBc2b<- delta*Bc2a - theta*Bc2b
+       dBc3a<- kappa*Bsc*Bc3b - lamda*Bc3a
+       dBc3b<- lamda*Bc3a - rho*Bc3b
+        list(c(dBsc, dBc1a, dBc1b, dBc2a, dBc2b, dBc3a, dBc3b))
+      })
+}
+```
+
+Variables
+
+Bsc = Bacteria sin capsula
+
+Bc1a = Bacteria reciente con capsula 1 
+
+Bc1b = Bacteria con capsula 1 generadora de plasmidos
+
+Bc2a = Bacteria reciente con capsula 2
+
+Bc2b = Bacteria con capsula 2 generadora de plasmidos
+
+Bc3a = Bacteria reciente con capsula 3 
+
+Bc3b = Bacteria con capsula 3 generadora de plasmidos
+
+
+Parametros
+
+beta = Tasa de tranformaciòn por efecto de virulencia con respecto al numero de generaciones bacterianas para capsula 1 (1/15, en 15 generaciones para que se diera a lugar la perdida de la capsula)
+
+theta = Tasa de tranformaciòn por efecto de virulencia con respecto al numero de generaciones bacterianas para capsula 2
+
+rho = Tasa de tranformaciòn por efecto de virulencia con respecto al numero de generaciones bacterianas para capsula 3
+
+epsilon = Tasa de transformacion de las bacterias sin capsula a bacterias con capsula 1
+
+gama = Tasa de transformacion de las bacterias sin capsula a bacterias con capsula 2
+
+kappa = Tasa de transformacion de las bacterias sin capsula a bacterias con capsula 3
+
+alfa = Tasa de "maduracion" para que la bacteria 1 conjugue plasmidos
+
+delta = Tasa de "maduracion" para que la bacteria 2 conjugue plasmidos
+
+lamda = Tasa de "maduracion" para que la bacteria 3 conjugue plasmidos
+
+```{r}
+parsBFP <- c(beta=1/15, theta=1/15, rho=1/15, epsilon=.5, gama=.5, kappa=.5, alfa=1/4, delta=1/4, lamda=1/4)  
+condiciones_inicialesBFP <- c(Bsc=50, Bc1a=50, Bc1b=50, Bc2a=50, Bc2b=50, Bc3a=50, Bc3b=50 )
+tiempoBFP <- seq(0, 30, by = 0.001)
+outBFP <- ode(condiciones_inicialesBFP, tiempoBFP, BacFaPla, parsBFP) 
+matplot(outBFP[ , 1], outBFP[ , 1:7], type = "l", xlab = "tiempo", ylab = "Población",
+main = "BacFa", lwd = 2)
+legend("topright", c("Bsc", "Bc1a", "Bc1b", "Bc2a", "Bc2b", "Bc3a", "Bc3b"), col = 1:3,lty=1:3,cex=0.5)
+```
